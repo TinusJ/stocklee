@@ -48,3 +48,8 @@ logging:
 stocklee:
   scheduler:
     market-data-fetch-cron: "0 */30 * * * *"  # Every 30 minutes
+
+# External APIs Configuration
+alphavantage:
+  api:
+    key: demo  # Replace with actual AlphaVantage API key for production

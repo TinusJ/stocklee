@@ -26,7 +26,7 @@ public class TradingService {
     private final UserProfileService userProfileService;
     private final StockTransactionService stockTransactionService;
     private final HistoryLogService historyLogService;
-    private final YahooFinanceService yahooFinanceService;
+    private final CompositeStockPriceProvider compositeStockPriceProvider;
 
     /**
      * Buy stocks for a user.
@@ -181,11 +181,11 @@ public class TradingService {
     }
 
     private Stock createNewStock(String symbol) {
-        if (!yahooFinanceService.isValidSymbol(symbol)) {
+        if (!compositeStockPriceProvider.isValidSymbol(symbol)) {
             return null;
         }
 
-        Optional<YahooFinanceService.StockInfo> stockInfoOpt = yahooFinanceService.getStockInfo(symbol);
+        Optional<YahooFinanceService.StockInfo> stockInfoOpt = compositeStockPriceProvider.getStockInfo(symbol);
         if (stockInfoOpt.isEmpty()) {
             return null;
         }
