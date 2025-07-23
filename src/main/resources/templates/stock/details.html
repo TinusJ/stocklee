@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head"></head>
+<body>
+
+<!-- Navigation -->
+<div th:replace="fragments/navigation :: navbar"></div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div th:replace="fragments/navigation :: sidebar"></div>
+        
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="bi bi-graph-up"></i> Stock Details
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <a th:href="@{/stocks/{id}/edit(id=${stock.id})}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <form th:action="@{/stocks/{id}/delete(id=${stock.id})}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-danger" 
+                                    th:onclick="'return confirmDelete(event, \'' + ${stock.symbol} + '\');'">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                    <a href="/stocks" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Flash messages -->
+            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle"></i> <span th:text="${successMessage}">Success message</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <!-- Stock Details -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <span th:text="${stock.symbol}">AAPL</span> - 
+                                <span th:text="${stock.name}">Apple Inc.</span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted">Basic Information</h6>
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td class="fw-bold">Symbol:</td>
+                                            <td>
+                                                <span class="badge bg-primary fs-6" th:text="${stock.symbol}">AAPL</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Company Name:</td>
+                                            <td th:text="${stock.name}">Apple Inc.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Market:</td>
+                                            <td>
+                                                <span class="badge bg-info" th:text="${stock.market}">NASDAQ</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Current Price:</td>
+                                            <td>
+                                                <span class="badge bg-success fs-6" th:text="'$' + ${#numbers.formatDecimal(stock.currentPrice, 1, 2)}">$150.00</span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted">Timestamps</h6>
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td class="fw-bold">Created:</td>
+                                            <td th:text="${#temporals.format(stock.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 12:00:00</td>
+                                        </tr>
+                                        <tr th:if="${stock.updatedAt}">
+                                            <td class="fw-bold">Last Updated:</td>
+                                            <td th:text="${#temporals.format(stock.updatedAt, 'yyyy-MM-dd HH:mm:ss')}">2024-01-02 15:30:00</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">ID:</td>
+                                            <td>
+                                                <small class="text-muted font-monospace" th:text="${stock.id}">uuid-here</small>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Description -->
+                            <div th:if="${stock.description}" class="mt-4">
+                                <h6 class="text-muted">Description</h6>
+                                <p th:text="${stock.description}" class="text-break">Stock description goes here...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Related Information -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Related Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="#" class="btn btn-outline-primary btn-sm disabled">
+                                    <i class="bi bi-clock-history"></i> Stock History
+                                </a>
+                                <a href="#" class="btn btn-outline-secondary btn-sm disabled">
+                                    <i class="bi bi-currency-exchange"></i> Transactions
+                                </a>
+                                <a href="#" class="btn btn-outline-info btn-sm disabled">
+                                    <i class="bi bi-briefcase"></i> Ownership Records
+                                </a>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i> 
+                                    These features will be available after implementing related entity pages.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Footer -->
+<div th:replace="fragments/footer :: footer"></div>
+
+<!-- Scripts -->
+<div th:replace="fragments/footer :: scripts"></div>
+
+</body>
+</html>

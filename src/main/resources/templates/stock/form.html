@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head"></head>
+<body>
+
+<!-- Navigation -->
+<div th:replace="fragments/navigation :: navbar"></div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div th:replace="fragments/navigation :: sidebar"></div>
+        
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="bi bi-graph-up"></i> 
+                    <span th:text="${editMode ? 'Edit Stock' : 'Create New Stock'}">Create New Stock</span>
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="/stocks" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Stock Form -->
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0" th:text="${editMode ? 'Edit Stock Details' : 'Stock Information'}">Stock Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <form th:action="${editMode ? '/stocks/' + stockDto.id : '/stocks'}" 
+                                  th:object="${stockDto}" 
+                                  method="post" 
+                                  novalidate>
+                                
+                                <!-- Symbol -->
+                                <div class="mb-3">
+                                    <label for="symbol" class="form-label">Symbol *</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="symbol" 
+                                           th:field="*{symbol}"
+                                           th:classappend="${#fields.hasErrors('symbol')} ? 'is-invalid' : ''"
+                                           placeholder="e.g., AAPL">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('symbol')}" th:errors="*{symbol}">
+                                        Symbol error message
+                                    </div>
+                                    <div class="form-text">Stock symbol (uppercase letters and numbers only)</div>
+                                </div>
+                                
+                                <!-- Name -->
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Company Name *</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="name" 
+                                           th:field="*{name}"
+                                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                                           placeholder="e.g., Apple Inc.">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">
+                                        Name error message
+                                    </div>
+                                </div>
+                                
+                                <!-- Current Price -->
+                                <div class="mb-3">
+                                    <label for="currentPrice" class="form-label">Current Price *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="currentPrice" 
+                                               th:field="*{currentPrice}"
+                                               th:classappend="${#fields.hasErrors('currentPrice')} ? 'is-invalid' : ''"
+                                               step="0.01"
+                                               min="0.01"
+                                               placeholder="0.00">
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('currentPrice')}" th:errors="*{currentPrice}">
+                                            Price error message
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Market -->
+                                <div class="mb-3">
+                                    <label for="market" class="form-label">Market *</label>
+                                    <select class="form-select" 
+                                            id="market" 
+                                            th:field="*{market}"
+                                            th:classappend="${#fields.hasErrors('market')} ? 'is-invalid' : ''">
+                                        <option value="">Select Market</option>
+                                        <option th:each="marketType : ${marketTypes}" 
+                                                th:value="${marketType}" 
+                                                th:text="${marketType}">Market Type</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('market')}" th:errors="*{market}">
+                                        Market error message
+                                    </div>
+                                </div>
+                                
+                                <!-- Description -->
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" 
+                                              id="description" 
+                                              th:field="*{description}"
+                                              th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"
+                                              rows="3"
+                                              placeholder="Optional description about the stock"></textarea>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">
+                                        Description error message
+                                    </div>
+                                    <div class="form-text">Maximum 500 characters</div>
+                                </div>
+                                
+                                <!-- Form Actions -->
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="/stocks" class="btn btn-secondary">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check"></i>
+                                        <span th:text="${editMode ? 'Update Stock' : 'Create Stock'}">Create Stock</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Footer -->
+<div th:replace="fragments/footer :: footer"></div>
+
+<!-- Scripts -->
+<div th:replace="fragments/footer :: scripts"></div>
+
+</body>
+</html>

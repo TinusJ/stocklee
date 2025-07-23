@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Navigation Bar -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+            <i class="bi bi-graph-up"></i> Stock Trading App
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/" th:classappend="${#httpServletRequest.requestURI == '/' ? 'active' : ''}">
+                        <i class="bi bi-house"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-list"></i> Entities
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/stocks"><i class="bi bi-graph-up"></i> Stocks</a></li>
+                        <li><a class="dropdown-item" href="/user-profiles"><i class="bi bi-person"></i> User Profiles</a></li>
+                        <li><a class="dropdown-item" href="/stock-transactions"><i class="bi bi-currency-exchange"></i> Transactions</a></li>
+                        <li><a class="dropdown-item" href="/owned-stocks"><i class="bi bi-briefcase"></i> Owned Stocks</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/history-logs"><i class="bi bi-clock-history"></i> History Logs</a></li>
+                        <li><a class="dropdown-item" href="/stock-history"><i class="bi bi-graph-down"></i> Stock History</a></li>
+                        <li><a class="dropdown-item" href="/transaction-history"><i class="bi bi-list-check"></i> Transaction History</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Sidebar -->
+<div th:fragment="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+    <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="/stocks" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/stocks') ? 'active' : ''}">
+                    <i class="bi bi-graph-up"></i> Stocks
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/user-profiles" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/user-profiles') ? 'active' : ''}">
+                    <i class="bi bi-person"></i> User Profiles
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/stock-transactions" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/stock-transactions') ? 'active' : ''}">
+                    <i class="bi bi-currency-exchange"></i> Transactions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/owned-stocks" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/owned-stocks') ? 'active' : ''}">
+                    <i class="bi bi-briefcase"></i> Owned Stocks
+                </a>
+            </li>
+        </ul>
+        
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+            <span>History</span>
+        </h6>
+        <ul class="nav flex-column mb-2">
+            <li class="nav-item">
+                <a class="nav-link" href="/history-logs" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/history-logs') ? 'active' : ''}">
+                    <i class="bi bi-clock-history"></i> History Logs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/stock-history" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/stock-history') ? 'active' : ''}">
+                    <i class="bi bi-graph-down"></i> Stock History
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/transaction-history" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/transaction-history') ? 'active' : ''}">
+                    <i class="bi bi-list-check"></i> Transaction History
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>
