@@ -1,124 +1,56 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/head :: head"></head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Trading Application</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+</head>
 <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-graph-up"></i> Stock Trading App
+            </a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/stocks">Stocks</a>
+                <a class="nav-link" href="/user-profiles">Users</a>
+            </div>
+        </div>
+    </nav>
 
-<!-- Navigation -->
-<div th:replace="fragments/navigation :: navbar"></div>
-
-<div class="container-fluid">
-    <div class="row">
-        <!-- Sidebar -->
-        <div th:replace="fragments/navigation :: sidebar"></div>
+    <div class="container mt-4">
+        <div class="jumbotron bg-primary text-white rounded p-5 mb-4">
+            <h1 class="display-4">Welcome to Stock Trading Application</h1>
+            <p class="lead">Manage stocks, track transactions, and monitor your portfolio.</p>
+        </div>
         
-        <!-- Main content -->
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">
-                    <i class="bi bi-house"></i> Dashboard
-                </h1>
-            </div>
-            
-            <!-- Welcome Section -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="jumbotron bg-primary text-white rounded p-5 mb-4">
-                        <h1 class="display-4">
-                            <i class="bi bi-graph-up"></i> Welcome to Stock Trading Application
-                        </h1>
-                        <p class="lead">Manage stocks, track transactions, and monitor your portfolio all in one place.</p>
-                        <hr class="my-4" style="border-color: rgba(255,255,255,0.3);">
-                        <p>Get started by exploring the different entities using the navigation menu.</p>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-graph-up display-4 text-primary mb-3"></i>
+                        <h5 class="card-title">Stocks</h5>
+                        <p class="card-text">Manage available stocks and their prices.</p>
+                        <a href="/stocks" class="btn btn-primary">View Stocks</a>
                     </div>
                 </div>
             </div>
             
-            <!-- Quick Actions -->
-            <div class="row">
-                <div class="col-md-6 col-lg-3 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-graph-up display-4 text-primary mb-3"></i>
-                            <h5 class="card-title">Stocks</h5>
-                            <p class="card-text">Manage available stocks and their prices.</p>
-                            <a href="/stocks" class="btn btn-primary">View Stocks</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-6 col-lg-3 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-person display-4 text-success mb-3"></i>
-                            <h5 class="card-title">User Profiles</h5>
-                            <p class="card-text">Manage user accounts and balances.</p>
-                            <a href="/user-profiles" class="btn btn-success">View Users</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-6 col-lg-3 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-currency-exchange display-4 text-warning mb-3"></i>
-                            <h5 class="card-title">Transactions</h5>
-                            <p class="card-text">Track buy and sell transactions.</p>
-                            <a href="/stock-transactions" class="btn btn-warning">View Transactions</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-6 col-lg-3 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body text-center">
-                            <i class="bi bi-briefcase display-4 text-info mb-3"></i>
-                            <h5 class="card-title">Owned Stocks</h5>
-                            <p class="card-text">View user stock portfolios.</p>
-                            <a href="/owned-stocks" class="btn btn-info">View Portfolios</a>
-                        </div>
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person display-4 text-success mb-3"></i>
+                        <h5 class="card-title">User Profiles</h5>
+                        <p class="card-text">Manage user accounts and balances.</p>
+                        <a href="/user-profiles" class="btn btn-success">View Users</a>
                     </div>
                 </div>
             </div>
-            
-            <!-- Features -->
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Application Features</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6><i class="bi bi-check-circle text-success"></i> Entity Management</h6>
-                                    <ul>
-                                        <li>Full CRUD operations for all entities</li>
-                                        <li>Form validation and error handling</li>
-                                        <li>Responsive design with Bootstrap</li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6><i class="bi bi-check-circle text-success"></i> History Tracking</h6>
-                                    <ul>
-                                        <li>Stock price history</li>
-                                        <li>Transaction status history</li>
-                                        <li>User activity logs</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+        </div>
     </div>
-</div>
 
-<!-- Footer -->
-<div th:replace="fragments/footer :: footer"></div>
-
-<!-- Scripts -->
-<div th:replace="fragments/footer :: scripts"></div>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
