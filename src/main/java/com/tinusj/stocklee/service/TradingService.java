@@ -185,17 +185,18 @@ public class TradingService {
             return null;
         }
 
-        Optional<BigDecimal> priceOpt = yahooFinanceService.getCurrentPrice(symbol);
-        if (priceOpt.isEmpty()) {
+        Optional<YahooFinanceService.StockInfo> stockInfoOpt = yahooFinanceService.getStockInfo(symbol);
+        if (stockInfoOpt.isEmpty()) {
             return null;
         }
 
+        YahooFinanceService.StockInfo stockInfo = stockInfoOpt.get();
         Stock stock = new Stock();
-        stock.setSymbol(symbol.toUpperCase());
-        stock.setName(symbol.toUpperCase() + " Stock"); // Simplified name
-        stock.setCurrentPrice(priceOpt.get());
+        stock.setSymbol(stockInfo.getSymbol());
+        stock.setName(stockInfo.getName());
+        stock.setCurrentPrice(stockInfo.getPrice());
         stock.setMarket(Stock.MarketType.OTHER);
-        stock.setDescription("Auto-created stock for symbol: " + symbol);
+        stock.setDescription(stockInfo.getDescription());
 
         return stockService.save(stock);
     }
