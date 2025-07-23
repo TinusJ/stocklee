@@ -33,6 +33,20 @@ public class StockService {
     }
 
     /**
+     * Find stock by symbol.
+     */
+    public Optional<Stock> findBySymbol(String symbol) {
+        return stockRepository.findBySymbol(symbol);
+    }
+
+    /**
+     * Check if stock exists by symbol.
+     */
+    public boolean existsBySymbol(String symbol) {
+        return stockRepository.existsBySymbol(symbol);
+    }
+
+    /**
      * Save or update a stock.
      */
     public Stock save(Stock stock) {

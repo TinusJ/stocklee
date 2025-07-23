@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Dashboard - Stock Trading Application</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-graph-up"></i> Stock Trading App
+            </a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/stocks">Stocks</a>
+                <a class="nav-link" href="/user-profiles">Users</a>
+                <a class="nav-link active" href="/">Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- User Selection -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-speedometer2"></i> Portfolio Dashboard</h1>
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span th:text="${selectedUser.username}">Current User</span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                    <li th:each="user : ${users}">
+                        <a class="dropdown-item" th:href="@{/?userId={id}(id=${user.id})}" th:text="${user.username}">User</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Portfolio Summary -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <i class="bi bi-wallet2 display-4 mb-2"></i>
+                        <h6>Available Balance</h6>
+                        <h4 th:text="'$' + ${#numbers.formatDecimal(portfolio.availableBalance, 1, 2)}">$0.00</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <i class="bi bi-piggy-bank display-4 mb-2"></i>
+                        <h6>Total Investment</h6>
+                        <h4 th:text="'$' + ${#numbers.formatDecimal(portfolio.totalInvestment, 1, 2)}">$0.00</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-secondary text-white">
+                    <div class="card-body text-center">
+                        <i class="bi bi-graph-up display-4 mb-2"></i>
+                        <h6>Current Value</h6>
+                        <h4 th:text="'$' + ${#numbers.formatDecimal(portfolio.currentValue, 1, 2)}">$0.00</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card" th:classappend="${portfolio.profitLoss >= 0} ? 'bg-success' : 'bg-danger'" style="color: white;">
+                    <div class="card-body text-center">
+                        <i class="bi" th:classappend="${portfolio.profitLoss >= 0} ? 'bi-arrow-up' : 'bi-arrow-down'" style="font-size: 3rem; margin-bottom: 0.5rem;"></i>
+                        <h6>Profit/Loss</h6>
+                        <h4 th:text="${portfolio.profitLoss >= 0 ? '+$' : '-$'} + ${#numbers.formatDecimal(#numbers.abs(portfolio.profitLoss), 1, 2)}">$0.00</h4>
+                        <small th:text="'(' + ${#numbers.formatDecimal(portfolio.profitLossPercentage, 1, 2)} + '%)'">(%)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#buyStockModal">
+                    <i class="bi bi-plus-circle"></i> Buy Stock
+                </button>
+            </div>
+            <div class="col-md-6">
+                <a href="/stocks" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-list"></i> Manage Stocks
+                </a>
+            </div>
+        </div>
+
+        <!-- Owned Stocks Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="bi bi-briefcase"></i> Your Portfolio</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(portfolio.ownedStocks)}" class="text-center py-4">
+                    <i class="bi bi-inbox display-4 text-muted"></i>
+                    <p class="mt-3 text-muted">No stocks in your portfolio yet. <button type="button" class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#buyStockModal">Buy your first stock</button></p>
+                </div>
+
+                <div th:if="${not #lists.isEmpty(portfolio.ownedStocks)}" class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Stock</th>
+                                <th>Shares</th>
+                                <th>Avg Price</th>
+                                <th>Current Price</th>
+                                <th>Investment</th>
+                                <th>Current Value</th>
+                                <th>Profit/Loss</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="stock : ${portfolio.ownedStocks}">
+                                <td>
+                                    <div>
+                                        <strong th:text="${stock.stockSymbol}">SYMBOL</strong>
+                                        <br>
+                                        <small class="text-muted" th:text="${stock.stockName}">Stock Name</small>
+                                    </div>
+                                </td>
+                                <td th:text="${stock.quantity}">0</td>
+                                <td th:text="'$' + ${#numbers.formatDecimal(stock.averagePrice, 1, 2)}">$0.00</td>
+                                <td th:text="'$' + ${#numbers.formatDecimal(stock.currentPrice, 1, 2)}">$0.00</td>
+                                <td th:text="'$' + ${#numbers.formatDecimal(stock.totalValue, 1, 2)}">$0.00</td>
+                                <td th:text="'$' + ${#numbers.formatDecimal(stock.currentValue, 1, 2)}">$0.00</td>
+                                <td>
+                                    <span th:classappend="${stock.profitLoss >= 0} ? 'text-success' : 'text-danger'">
+                                        <span th:text="${stock.profitLoss >= 0 ? '+$' : '-$'} + ${#numbers.formatDecimal(#numbers.abs(stock.profitLoss), 1, 2)}">$0.00</span>
+                                        <br>
+                                        <small th:text="'(' + ${#numbers.formatDecimal(stock.profitLossPercentage, 1, 2)} + '%)'">(%)</small>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                            th:onclick="'prepareSell(\'' + ${stock.id} + '\', \'' + ${stock.stockSymbol} + '\', ' + ${stock.quantity} + ')'"
+                                            data-bs-toggle="modal" data-bs-target="#sellStockModal">
+                                        <i class="bi bi-dash-circle"></i> Sell
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buy Stock Modal -->
+    <div class="modal fade" id="buyStockModal" tabindex="-1" aria-labelledby="buyStockModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/buy-stock}" method="post" th:object="${buyStockDto}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="buyStockModalLabel">Buy Stock</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="userId" th:value="${selectedUser.id}">
+                        
+                        <div class="mb-3">
+                            <label for="symbol" class="form-label">Stock Symbol</label>
+                            <input type="text" class="form-control" id="symbol" th:field="*{symbol}" 
+                                   placeholder="e.g., AAPL, MSFT" required style="text-transform: uppercase;">
+                            <div class="form-text">Enter a valid stock symbol (1-5 characters)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="investmentAmount" class="form-label">Investment Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="investmentAmount" th:field="*{investmentAmount}" 
+                                       step="0.01" min="0.01" placeholder="100.00" required>
+                            </div>
+                            <div class="form-text">Available balance: $<span th:text="${#numbers.formatDecimal(portfolio.availableBalance, 1, 2)}">0.00</span></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Buy Stock</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sell Stock Modal -->
+    <div class="modal fade" id="sellStockModal" tabindex="-1" aria-labelledby="sellStockModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/sell-stock}" method="post" th:object="${sellStockDto}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="sellStockModalLabel">Sell Stock</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="userId" th:value="${selectedUser.id}">
+                        <input type="hidden" id="sellOwnedStockId" th:field="*{ownedStockId}">
+                        
+                        <div class="alert alert-info">
+                            <strong id="sellStockSymbol">STOCK</strong> - You own <strong id="sellMaxShares">0</strong> shares
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="sellQuantity" class="form-label">Shares to Sell</label>
+                            <input type="number" class="form-control" id="sellQuantity" th:field="*{quantity}" 
+                                   min="1" placeholder="10" required>
+                            <div class="form-text">Enter the number of shares you want to sell</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Sell Shares</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function prepareSell(ownedStockId, symbol, maxShares) {
+            document.getElementById('sellOwnedStockId').value = ownedStockId;
+            document.getElementById('sellStockSymbol').textContent = symbol;
+            document.getElementById('sellMaxShares').textContent = maxShares;
+            document.getElementById('sellQuantity').max = maxShares;
+            document.getElementById('sellQuantity').value = '';
+        }
+
+        // Auto-uppercase stock symbol input
+        document.getElementById('symbol').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    </script>
+</body>
+</html>

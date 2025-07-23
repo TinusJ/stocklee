@@ -1,10 +1,13 @@
 package com.tinusj.stocklee.service;
 
 import com.tinusj.stocklee.entity.OwnedStock;
+import com.tinusj.stocklee.entity.Stock;
+import com.tinusj.stocklee.entity.UserProfile;
 import com.tinusj.stocklee.repository.OwnedStockRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -58,5 +61,113 @@ public class OwnedStockService {
      */
     public long count() {
         return ownedStockRepository.count();
+    }
+
+    /**
+     * Find all owned stocks for a specific user.
+     */
+    public List<OwnedStock> findByUser(UserProfile user) {
+        return ownedStockRepository.findByUserWithStockDetails(user);
+    }
+
+    /**
+     * Find owned stock by user and stock.
+     */
+    public Optional<OwnedStock> findByUserAndStock(UserProfile user, Stock stock) {
+        return ownedStockRepository.findByUserAndStock(user, stock);
+    }
+
+    /**
+     * Add shares to user's portfolio or create new holding.
+     */
+    public OwnedStock addShares(UserProfile user, Stock stock, Integer quantity, BigDecimal pricePerShare) {
+        Optional<OwnedStock> existingOwned = findByUserAndStock(user, stock);
+        
+        if (existingOwned.isPresent()) {
+            // Update existing holding
+            OwnedStock owned = existingOwned.get();
+            BigDecimal currentTotal = owned.getAveragePrice().multiply(BigDecimal.valueOf(owned.getQuantity()));
+            BigDecimal newTotal = pricePerShare.multiply(BigDecimal.valueOf(quantity));
+            BigDecimal combinedTotal = currentTotal.add(newTotal);
+            
+            int newQuantity = owned.getQuantity() + quantity;
+            BigDecimal newAveragePrice = combinedTotal.divide(BigDecimal.valueOf(newQuantity), 2, BigDecimal.ROUND_HALF_UP);
+            
+            owned.setQuantity(newQuantity);
+            owned.setAveragePrice(newAveragePrice);
+            owned.setTotalValue(combinedTotal);
+            
+            return save(owned);
+        } else {
+            // Create new holding
+            OwnedStock newOwned = new OwnedStock();
+            newOwned.setUser(user);
+            newOwned.setStock(stock);
+            newOwned.setQuantity(quantity);
+            newOwned.setAveragePrice(pricePerShare);
+            newOwned.setTotalValue(pricePerShare.multiply(BigDecimal.valueOf(quantity)));
+            
+            return save(newOwned);
+        }
+    }
+
+    /**
+     * Remove shares from user's portfolio.
+     */
+    public boolean removeShares(UserProfile user, Stock stock, Integer quantity) {
+        Optional<OwnedStock> existingOwned = findByUserAndStock(user, stock);
+        
+        if (existingOwned.isEmpty()) {
+            return false; // User doesn't own this stock
+        }
+        
+        OwnedStock owned = existingOwned.get();
+        if (owned.getQuantity() < quantity) {
+            return false; // Not enough shares to sell
+        }
+        
+        if (owned.getQuantity().equals(quantity)) {
+            // Selling all shares - delete the record
+            deleteById(owned.getId());
+        } else {
+            // Selling partial shares - update the record
+            int newQuantity = owned.getQuantity() - quantity;
+            BigDecimal newTotalValue = owned.getAveragePrice().multiply(BigDecimal.valueOf(newQuantity));
+            
+            owned.setQuantity(newQuantity);
+            owned.setTotalValue(newTotalValue);
+            save(owned);
+        }
+        
+        return true;
+    }
+
+    /**
+     * Calculate total portfolio value for a user at current prices.
+     */
+    public BigDecimal calculateTotalPortfolioValue(UserProfile user) {
+        List<OwnedStock> ownedStocks = findByUser(user);
+        return ownedStocks.stream()
+                .map(owned -> owned.getStock().getCurrentPrice().multiply(BigDecimal.valueOf(owned.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Calculate total investment cost for a user.
+     */
+    public BigDecimal calculateTotalInvestment(UserProfile user) {
+        List<OwnedStock> ownedStocks = findByUser(user);
+        return ownedStocks.stream()
+                .map(OwnedStock::getTotalValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Calculate profit/loss for a user.
+     */
+    public BigDecimal calculateProfitLoss(UserProfile user) {
+        BigDecimal currentValue = calculateTotalPortfolioValue(user);
+        BigDecimal investment = calculateTotalInvestment(user);
+        return currentValue.subtract(investment);
     }
 }
