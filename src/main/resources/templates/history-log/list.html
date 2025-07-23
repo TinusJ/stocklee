@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(pageTitle=${pageTitle}, content=~{::content})">
+<head>
+    <title th:text="${pageTitle}">History Logs</title>
+</head>
+
+<div th:fragment="content">
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Filter History Logs</h5>
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label for="userId" class="form-label">User</label>
+                    <select class="form-select" id="userId" name="userId">
+                        <option value="">All Users</option>
+                        <option th:each="user : ${users}" 
+                                th:value="${user.id}" 
+                                th:text="${user.username}" 
+                                th:selected="${user.id == selectedUserId}"></option>
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filter</button>
+                    <a href="/history-logs" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- History Logs -->
+    <div class="card">
+        <div class="card-body">
+            <div th:if="${#lists.isEmpty(historyLogs)}" class="text-center text-muted py-4">
+                <i class="bi bi-clock-history fs-1"></i>
+                <p class="mt-3 mb-0">No history logs found.</p>
+            </div>
+            
+            <div th:unless="${#lists.isEmpty(historyLogs)}">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Date</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="log : ${historyLogs}">
+                                <td th:text="${#temporals.format(log.timestamp, 'dd/MM/yyyy HH:mm:ss')}">Date</td>
+                                <td th:text="${log.user.username}">User</td>
+                                <td>
+                                    <i class="bi bi-activity text-primary"></i>
+                                    <span th:text="${log.action}">Action</span>
+                                </td>
+                                <td>
+                                    <a th:href="@{/history-logs/{id}(id=${log.id})}" 
+                                       class="btn btn-sm btn-outline-primary">View Details</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3 text-muted">
+                    <small>Showing <span th:text="${#lists.size(historyLogs)}">0</span> history logs</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</html>
