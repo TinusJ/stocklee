@@ -64,4 +64,18 @@ public class UserProfileService {
     public long count() {
         return userProfileRepository.count();
     }
+
+    /**
+     * Find user profile by username.
+     */
+    public Optional<UserProfile> findByUsername(String username) {
+        return userProfileRepository.findByUsername(username);
+    }
+
+    /**
+     * Check if a user with the given username exists.
+     */
+    public boolean existsByUsername(String username) {
+        return userProfileRepository.existsByUsername(username);
+    }
 }
