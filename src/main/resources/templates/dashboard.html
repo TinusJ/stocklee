@@ -77,9 +77,9 @@
                 </div>
             </div>
             <div class="col-md-3 mb-3">
-                <div class="card" th:classappend="${portfolio.profitLoss >= 0} ? 'bg-success' : 'bg-danger'" style="color: white;">
+                <div class="card text-white" th:classappend="${portfolio.profitLoss >= 0} ? 'bg-success' : 'bg-danger'">
                     <div class="card-body text-center">
-                        <i class="bi" th:classappend="${portfolio.profitLoss >= 0} ? 'bi-arrow-up' : 'bi-arrow-down'" style="font-size: 3rem; margin-bottom: 0.5rem;"></i>
+                        <i class="bi display-4 mb-2" th:classappend="${portfolio.profitLoss >= 0} ? 'bi-arrow-up' : 'bi-arrow-down'"></i>
                         <h6>Profit/Loss</h6>
                         <h4 th:text="${portfolio.profitLoss >= 0 ? '+$' + #numbers.formatDecimal(portfolio.profitLoss, 1, 2) : '-$' + #numbers.formatDecimal(portfolio.profitLoss * -1, 1, 2)}">$0.00</h4>
                         <small th:text="'(' + ${#numbers.formatDecimal(portfolio.profitLossPercentage, 1, 2)} + '%)'">(%)</small>
@@ -136,7 +136,7 @@
                                         <small class="text-muted" th:text="${stock.stockName}">Stock Name</small>
                                     </div>
                                 </td>
-                                <td th:text="${stock.quantity}">0</td>
+                                <td th:text="${#numbers.formatDecimal(stock.quantity, 1, 4)}">0</td>
                                 <td th:text="'$' + ${#numbers.formatDecimal(stock.averagePrice, 1, 2)}">$0.00</td>
                                 <td th:text="'$' + ${#numbers.formatDecimal(stock.currentPrice, 1, 2)}">$0.00</td>
                                 <td th:text="'$' + ${#numbers.formatDecimal(stock.totalValue, 1, 2)}">$0.00</td>
@@ -223,8 +223,8 @@
                         <div class="mb-3">
                             <label for="sellQuantity" class="form-label">Shares to Sell</label>
                             <input type="number" class="form-control" id="sellQuantity" th:field="*{quantity}" 
-                                   min="1" placeholder="10" required>
-                            <div class="form-text">Enter the number of shares you want to sell</div>
+                                   step="0.0001" min="0.0001" placeholder="10.5" required>
+                            <div class="form-text">Enter the number of shares you want to sell (fractional shares allowed)</div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -241,7 +241,9 @@
         function prepareSell(ownedStockId, symbol, maxShares) {
             document.getElementById('sellOwnedStockId').value = ownedStockId;
             document.getElementById('sellStockSymbol').textContent = symbol;
-            document.getElementById('sellMaxShares').textContent = maxShares;
+            // Format the number to display up to 4 decimal places, removing trailing zeros
+            const formattedShares = parseFloat(maxShares).toString();
+            document.getElementById('sellMaxShares').textContent = formattedShares;
             document.getElementById('sellQuantity').max = maxShares;
             document.getElementById('sellQuantity').value = '';
         }

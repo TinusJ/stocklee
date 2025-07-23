@@ -32,8 +32,8 @@ public class StockTransaction {
     @Column(nullable = false)
     private TransactionType transactionType;
 
-    @Column(nullable = false)
-    private Integer quantity;
+    @Column(nullable = false, scale = 4)
+    private BigDecimal quantity;
 
     @Column(nullable = false, scale = 2)
     private BigDecimal price;
