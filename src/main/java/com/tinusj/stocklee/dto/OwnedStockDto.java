@@ -14,7 +14,7 @@ import java.util.UUID;
 public class OwnedStockDto {
 
     private UUID id;
-    private Integer quantity;
+    private BigDecimal quantity;
     private BigDecimal averagePrice;
     private BigDecimal totalValue;
     
@@ -31,7 +31,7 @@ public class OwnedStockDto {
         if (totalValue == null || totalValue.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
-        return profitLoss.divide(totalValue, 4, BigDecimal.ROUND_HALF_UP)
+        return profitLoss.divide(totalValue, 4, java.math.RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
     }
 }

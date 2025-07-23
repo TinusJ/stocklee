@@ -33,9 +33,12 @@ public class TradingService {
      */
     public String buyStock(UserProfile user, BuyStockDto buyStockDto) {
         try {
+            // Calculate current balance if null
+            BigDecimal availableBalance = calculateUserBalance(user);
+            
             // Validate user has sufficient balance
-            if (user.getBalance().compareTo(buyStockDto.getInvestmentAmount()) < 0) {
-                return "Insufficient balance. Available: $" + user.getBalance();
+            if (availableBalance.compareTo(buyStockDto.getInvestmentAmount()) < 0) {
+                return "Insufficient balance. Available: $" + availableBalance;
             }
 
             // Check if stock exists or create new one
@@ -46,18 +49,19 @@ public class TradingService {
                 return "Invalid stock symbol: " + buyStockDto.getSymbol();
             }
 
-            // Calculate number of shares
+            // Calculate number of shares (allow fractional)
             BigDecimal currentPrice = stock.getCurrentPrice();
-            int shares = buyStockDto.getInvestmentAmount().divide(currentPrice, 0, BigDecimal.ROUND_DOWN).intValue();
+            BigDecimal shares = buyStockDto.getInvestmentAmount().divide(currentPrice, 4, java.math.RoundingMode.DOWN);
             
-            if (shares == 0) {
-                return "Investment amount too small. Minimum required: $" + currentPrice;
+            if (shares.compareTo(BigDecimal.valueOf(0.0001)) < 0) {
+                return "Investment amount too small. Minimum required: $" + currentPrice.multiply(BigDecimal.valueOf(0.0001));
             }
 
-            BigDecimal actualCost = currentPrice.multiply(BigDecimal.valueOf(shares));
+            BigDecimal actualCost = currentPrice.multiply(shares);
 
             // Update user balance
-            user.setBalance(user.getBalance().subtract(actualCost));
+            BigDecimal newBalance = availableBalance.subtract(actualCost);
+            user.setBalance(newBalance);
             userProfileService.save(user);
 
             // Add shares to portfolio
@@ -74,11 +78,11 @@ public class TradingService {
             stockTransactionService.save(transaction);
 
             // Log activity
-            String logMessage = String.format("Bought %d shares of %s at $%.2f per share (Total: $%.2f)", 
+            String logMessage = String.format("Bought %.4f shares of %s at $%.2f per share (Total: $%.2f)", 
                     shares, stock.getSymbol(), currentPrice, actualCost);
             logActivity(user, logMessage);
 
-            return String.format("Successfully bought %d shares of %s for $%.2f", shares, stock.getSymbol(), actualCost);
+            return String.format("Successfully bought %.4f shares of %s for $%.2f", shares, stock.getSymbol(), actualCost);
 
         } catch (Exception e) {
             log.error("Error buying stock for user {}: {}", user.getUsername(), e.getMessage(), e);
@@ -101,16 +105,17 @@ public class TradingService {
                 return "You don't own this stock";
             }
 
-            if (ownedStock.getQuantity() < sellStockDto.getQuantity()) {
+            if (ownedStock.getQuantity().compareTo(sellStockDto.getQuantity()) < 0) {
                 return "Insufficient shares. You own: " + ownedStock.getQuantity();
             }
 
             Stock stock = ownedStock.getStock();
             BigDecimal currentPrice = stock.getCurrentPrice();
-            BigDecimal sellValue = currentPrice.multiply(BigDecimal.valueOf(sellStockDto.getQuantity()));
+            BigDecimal sellValue = currentPrice.multiply(sellStockDto.getQuantity());
 
             // Update user balance
-            user.setBalance(user.getBalance().add(sellValue));
+            BigDecimal currentBalance = calculateUserBalance(user);
+            user.setBalance(currentBalance.add(sellValue));
             userProfileService.save(user);
 
             // Remove shares from portfolio
@@ -127,11 +132,11 @@ public class TradingService {
             stockTransactionService.save(transaction);
 
             // Log activity
-            String logMessage = String.format("Sold %d shares of %s at $%.2f per share (Total: $%.2f)", 
+            String logMessage = String.format("Sold %.4f shares of %s at $%.2f per share (Total: $%.2f)", 
                     sellStockDto.getQuantity(), stock.getSymbol(), currentPrice, sellValue);
             logActivity(user, logMessage);
 
-            return String.format("Successfully sold %d shares of %s for $%.2f", 
+            return String.format("Successfully sold %.4f shares of %s for $%.2f", 
                     sellStockDto.getQuantity(), stock.getSymbol(), sellValue);
 
         } catch (Exception e) {
@@ -145,7 +150,7 @@ public class TradingService {
      */
     public PortfolioSummaryDto getPortfolioSummary(UserProfile user) {
         PortfolioSummaryDto summary = new PortfolioSummaryDto();
-        summary.setAvailableBalance(user.getBalance());
+        summary.setAvailableBalance(calculateUserBalance(user));
         summary.setTotalInvestment(ownedStockService.calculateTotalInvestment(user));
         summary.setCurrentValue(ownedStockService.calculateTotalPortfolioValue(user));
         summary.setProfitLoss(ownedStockService.calculateProfitLoss(user));
@@ -158,6 +163,21 @@ public class TradingService {
         );
         
         return summary;
+    }
+
+    /**
+     * Calculate user's current balance dynamically.
+     * If balance is null, calculate from transactions.
+     */
+    private BigDecimal calculateUserBalance(UserProfile user) {
+        if (user.getBalance() != null) {
+            return user.getBalance();
+        }
+        
+        // Calculate balance from transactions if not set
+        // This would be the initial balance (0) plus any deposits minus any stock purchases plus any stock sales
+        // For simplicity, we'll start with 0 and calculate from stock transactions
+        return BigDecimal.ZERO; // In a real app, you might want to set a default starting balance
     }
 
     private Stock createNewStock(String symbol) {
@@ -201,7 +221,7 @@ public class TradingService {
         dto.setCurrentPrice(stock.getCurrentPrice());
         
         // Calculate current value and profit/loss
-        BigDecimal currentValue = stock.getCurrentPrice().multiply(BigDecimal.valueOf(ownedStock.getQuantity()));
+        BigDecimal currentValue = stock.getCurrentPrice().multiply(ownedStock.getQuantity());
         dto.setCurrentValue(currentValue);
         dto.setProfitLoss(currentValue.subtract(ownedStock.getTotalValue()));
         

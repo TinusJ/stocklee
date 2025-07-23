@@ -5,6 +5,7 @@ import com.tinusj.stocklee.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,6 +37,10 @@ public class UserProfileService {
      * Save or update a user profile.
      */
     public UserProfile save(UserProfile userProfile) {
+        // Set default balance if null
+        if (userProfile.getBalance() == null) {
+            userProfile.setBalance(BigDecimal.ZERO);
+        }
         return userProfileRepository.save(userProfile);
     }
 

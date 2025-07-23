@@ -27,7 +27,7 @@ public class UserProfile {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false, scale = 2)
+    @Column(nullable = true, scale = 2)
     private BigDecimal balance;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

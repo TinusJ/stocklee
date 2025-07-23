@@ -27,8 +27,8 @@ public class OwnedStock {
     @JoinColumn(nullable = false)
     private Stock stock;
 
-    @Column(nullable = false)
-    private Integer quantity;
+    @Column(nullable = false, scale = 4)
+    private BigDecimal quantity;
 
     @Column(nullable = false, scale = 2)
     private BigDecimal averagePrice;

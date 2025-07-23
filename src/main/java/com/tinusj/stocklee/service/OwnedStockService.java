@@ -80,18 +80,18 @@ public class OwnedStockService {
     /**
      * Add shares to user's portfolio or create new holding.
      */
-    public OwnedStock addShares(UserProfile user, Stock stock, Integer quantity, BigDecimal pricePerShare) {
+    public OwnedStock addShares(UserProfile user, Stock stock, BigDecimal quantity, BigDecimal pricePerShare) {
         Optional<OwnedStock> existingOwned = findByUserAndStock(user, stock);
         
         if (existingOwned.isPresent()) {
             // Update existing holding
             OwnedStock owned = existingOwned.get();
-            BigDecimal currentTotal = owned.getAveragePrice().multiply(BigDecimal.valueOf(owned.getQuantity()));
-            BigDecimal newTotal = pricePerShare.multiply(BigDecimal.valueOf(quantity));
+            BigDecimal currentTotal = owned.getAveragePrice().multiply(owned.getQuantity());
+            BigDecimal newTotal = pricePerShare.multiply(quantity);
             BigDecimal combinedTotal = currentTotal.add(newTotal);
             
-            int newQuantity = owned.getQuantity() + quantity;
-            BigDecimal newAveragePrice = combinedTotal.divide(BigDecimal.valueOf(newQuantity), 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal newQuantity = owned.getQuantity().add(quantity);
+            BigDecimal newAveragePrice = combinedTotal.divide(newQuantity, 4, java.math.RoundingMode.HALF_UP);
             
             owned.setQuantity(newQuantity);
             owned.setAveragePrice(newAveragePrice);
@@ -105,7 +105,7 @@ public class OwnedStockService {
             newOwned.setStock(stock);
             newOwned.setQuantity(quantity);
             newOwned.setAveragePrice(pricePerShare);
-            newOwned.setTotalValue(pricePerShare.multiply(BigDecimal.valueOf(quantity)));
+            newOwned.setTotalValue(pricePerShare.multiply(quantity));
             
             return save(newOwned);
         }
@@ -114,7 +114,7 @@ public class OwnedStockService {
     /**
      * Remove shares from user's portfolio.
      */
-    public boolean removeShares(UserProfile user, Stock stock, Integer quantity) {
+    public boolean removeShares(UserProfile user, Stock stock, BigDecimal quantity) {
         Optional<OwnedStock> existingOwned = findByUserAndStock(user, stock);
         
         if (existingOwned.isEmpty()) {
@@ -122,17 +122,17 @@ public class OwnedStockService {
         }
         
         OwnedStock owned = existingOwned.get();
-        if (owned.getQuantity() < quantity) {
+        if (owned.getQuantity().compareTo(quantity) < 0) {
             return false; // Not enough shares to sell
         }
         
-        if (owned.getQuantity().equals(quantity)) {
+        if (owned.getQuantity().compareTo(quantity) == 0) {
             // Selling all shares - delete the record
             deleteById(owned.getId());
         } else {
             // Selling partial shares - update the record
-            int newQuantity = owned.getQuantity() - quantity;
-            BigDecimal newTotalValue = owned.getAveragePrice().multiply(BigDecimal.valueOf(newQuantity));
+            BigDecimal newQuantity = owned.getQuantity().subtract(quantity);
+            BigDecimal newTotalValue = owned.getAveragePrice().multiply(newQuantity);
             
             owned.setQuantity(newQuantity);
             owned.setTotalValue(newTotalValue);
@@ -148,7 +148,7 @@ public class OwnedStockService {
     public BigDecimal calculateTotalPortfolioValue(UserProfile user) {
         List<OwnedStock> ownedStocks = findByUser(user);
         return ownedStocks.stream()
-                .map(owned -> owned.getStock().getCurrentPrice().multiply(BigDecimal.valueOf(owned.getQuantity())))
+                .map(owned -> owned.getStock().getCurrentPrice().multiply(owned.getQuantity()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

@@ -27,7 +27,6 @@ public class UserProfileDto {
     @Size(max = 100, message = "Email cannot exceed 100 characters")
     private String email;
 
-    @NotNull(message = "Balance is required")
     @DecimalMin(value = "0.00", message = "Balance cannot be negative")
     @Digits(integer = 10, fraction = 2, message = "Balance must be a valid monetary amount")
     private BigDecimal balance;

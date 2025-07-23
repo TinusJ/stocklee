@@ -28,9 +28,9 @@ public class StockTransactionDto {
     private StockTransaction.TransactionType transactionType;
 
     @NotNull(message = "Quantity is required")
-    @Min(value = 1, message = "Quantity must be at least 1")
-    @Max(value = 1000000, message = "Quantity cannot exceed 1,000,000")
-    private Integer quantity;
+    @DecimalMin(value = "0.0001", message = "Quantity must be greater than 0")
+    @Digits(integer = 10, fraction = 4, message = "Quantity must be a valid number with up to 4 decimal places")
+    private BigDecimal quantity;
 
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.01", message = "Price must be greater than 0")

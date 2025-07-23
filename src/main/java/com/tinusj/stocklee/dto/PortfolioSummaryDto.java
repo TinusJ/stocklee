@@ -23,7 +23,7 @@ public class PortfolioSummaryDto {
         if (totalInvestment == null || totalInvestment.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
-        return profitLoss.divide(totalInvestment, 4, BigDecimal.ROUND_HALF_UP)
+        return profitLoss.divide(totalInvestment, 4, java.math.RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
     }
 }
