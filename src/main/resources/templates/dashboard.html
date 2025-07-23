@@ -81,7 +81,7 @@
                     <div class="card-body text-center">
                         <i class="bi" th:classappend="${portfolio.profitLoss >= 0} ? 'bi-arrow-up' : 'bi-arrow-down'" style="font-size: 3rem; margin-bottom: 0.5rem;"></i>
                         <h6>Profit/Loss</h6>
-                        <h4 th:text="${portfolio.profitLoss >= 0 ? '+$' : '-$'} + ${#numbers.formatDecimal(#numbers.abs(portfolio.profitLoss), 1, 2)}">$0.00</h4>
+                        <h4 th:text="${portfolio.profitLoss >= 0 ? '+$' + #numbers.formatDecimal(portfolio.profitLoss, 1, 2) : '-$' + #numbers.formatDecimal(portfolio.profitLoss * -1, 1, 2)}">$0.00</h4>
                         <small th:text="'(' + ${#numbers.formatDecimal(portfolio.profitLossPercentage, 1, 2)} + '%)'">(%)</small>
                     </div>
                 </div>
@@ -143,14 +143,16 @@
                                 <td th:text="'$' + ${#numbers.formatDecimal(stock.currentValue, 1, 2)}">$0.00</td>
                                 <td>
                                     <span th:classappend="${stock.profitLoss >= 0} ? 'text-success' : 'text-danger'">
-                                        <span th:text="${stock.profitLoss >= 0 ? '+$' : '-$'} + ${#numbers.formatDecimal(#numbers.abs(stock.profitLoss), 1, 2)}">$0.00</span>
+                                        <span th:text="${stock.profitLoss >= 0 ? '+$' + #numbers.formatDecimal(stock.profitLoss, 1, 2) : '-$' + #numbers.formatDecimal(stock.profitLoss * -1, 1, 2)}">$0.00</span>
                                         <br>
                                         <small th:text="'(' + ${#numbers.formatDecimal(stock.profitLossPercentage, 1, 2)} + '%)'">(%)</small>
                                     </span>
                                 </td>
                                 <td>
-                                    <button type="button" class="btn btn-outline-danger btn-sm" 
-                                            th:onclick="'prepareSell(\'' + ${stock.id} + '\', \'' + ${stock.stockSymbol} + '\', ' + ${stock.quantity} + ')'"
+                                    <button type="button" class="btn btn-outline-danger btn-sm sell-stock-btn" 
+                                            th:data-stock-id="${stock.id}"
+                                            th:data-stock-symbol="${stock.stockSymbol}"
+                                            th:data-stock-quantity="${stock.quantity}"
                                             data-bs-toggle="modal" data-bs-target="#sellStockModal">
                                         <i class="bi bi-dash-circle"></i> Sell
                                     </button>
@@ -243,6 +245,18 @@
             document.getElementById('sellQuantity').max = maxShares;
             document.getElementById('sellQuantity').value = '';
         }
+
+        // Handle sell button clicks
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.sell-stock-btn').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const stockId = this.getAttribute('data-stock-id');
+                    const stockSymbol = this.getAttribute('data-stock-symbol');
+                    const quantity = this.getAttribute('data-stock-quantity');
+                    prepareSell(stockId, stockSymbol, quantity);
+                });
+            });
+        });
 
         // Auto-uppercase stock symbol input
         document.getElementById('symbol').addEventListener('input', function(e) {
