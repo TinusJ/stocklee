@@ -22,14 +22,14 @@ public class HistoryLogService {
      * Find all history logs.
      */
     public List<HistoryLog> findAll() {
-        return historyLogRepository.findAll();
+        return historyLogRepository.findAllWithUser();
     }
 
     /**
      * Find history log by ID.
      */
     public Optional<HistoryLog> findById(UUID id) {
-        return historyLogRepository.findById(id);
+        return historyLogRepository.findByIdWithUser(id);
     }
 
     /**

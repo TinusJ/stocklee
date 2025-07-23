@@ -25,14 +25,14 @@ public class OwnedStockService {
      * Find all owned stocks.
      */
     public List<OwnedStock> findAll() {
-        return ownedStockRepository.findAll();
+        return ownedStockRepository.findAllWithUserAndStock();
     }
 
     /**
      * Find owned stock by ID.
      */
     public Optional<OwnedStock> findById(UUID id) {
-        return ownedStockRepository.findById(id);
+        return ownedStockRepository.findByIdWithUserAndStock(id);
     }
 
     /**
