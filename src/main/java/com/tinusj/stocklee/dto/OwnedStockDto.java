@@ -1,6 +1,5 @@
 package com.tinusj.stocklee.dto;
 
-import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -8,38 +7,31 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
- * Data Transfer Object for OwnedStock entity with validation.
+ * Data Transfer Object for OwnedStock entity with additional fields for dashboard display.
  */
 @Data
 @NoArgsConstructor
 public class OwnedStockDto {
 
     private UUID id;
-
-    @NotNull(message = "User is required")
-    private UUID userId;
-
-    @NotNull(message = "Stock is required")
-    private UUID stockId;
-
-    @NotNull(message = "Quantity is required")
-    @Min(value = 1, message = "Quantity must be at least 1")
-    @Max(value = 1000000, message = "Quantity cannot exceed 1,000,000")
     private Integer quantity;
-
-    @NotNull(message = "Average price is required")
-    @DecimalMin(value = "0.01", message = "Average price must be greater than 0")
-    @Digits(integer = 10, fraction = 2, message = "Average price must be a valid monetary amount")
     private BigDecimal averagePrice;
-
-    @NotNull(message = "Total value is required")
-    @DecimalMin(value = "0.01", message = "Total value must be greater than 0")
-    @Digits(integer = 12, fraction = 2, message = "Total value must be a valid monetary amount")
     private BigDecimal totalValue;
-
-    // Helper fields for display
+    
+    // Stock details
     private String stockSymbol;
     private String stockName;
-    private String username;
-    private BigDecimal currentStockPrice;
+    private BigDecimal currentPrice;
+    
+    // Calculated fields
+    private BigDecimal currentValue;
+    private BigDecimal profitLoss;
+    
+    public BigDecimal getProfitLossPercentage() {
+        if (totalValue == null || totalValue.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return profitLoss.divide(totalValue, 4, BigDecimal.ROUND_HALF_UP)
+                .multiply(BigDecimal.valueOf(100));
+    }
 }
