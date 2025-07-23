@@ -22,14 +22,14 @@ public class StockTransactionService {
      * Find all stock transactions.
      */
     public List<StockTransaction> findAll() {
-        return stockTransactionRepository.findAll();
+        return stockTransactionRepository.findAllWithUserAndStock();
     }
 
     /**
      * Find stock transaction by ID.
      */
     public Optional<StockTransaction> findById(UUID id) {
-        return stockTransactionRepository.findById(id);
+        return stockTransactionRepository.findByIdWithUserAndStock(id);
     }
 
     /**

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout :: layout(pageTitle=${pageTitle}, content=~{::content})">
+<head>
+    <title th:text="${pageTitle}">Transaction Details</title>
+</head>
+
+<div th:fragment="content">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Transaction Details</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Date:</dt>
+                        <dd class="col-sm-8" th:text="${#temporals.format(transaction.timestamp, 'dd/MM/yyyy HH:mm:ss')}">Date</dd>
+                        
+                        <dt class="col-sm-4">User:</dt>
+                        <dd class="col-sm-8" th:text="${transaction.user.username}">User</dd>
+                        
+                        <dt class="col-sm-4">Stock:</dt>
+                        <dd class="col-sm-8">
+                            <strong th:text="${transaction.stock.symbol}">SYMBOL</strong> - 
+                            <span th:text="${transaction.stock.name}">Stock Name</span>
+                        </dd>
+                        
+                        <dt class="col-sm-4">Type:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge" 
+                                  th:classappend="${transaction.transactionType.name() == 'BUY'} ? 'bg-success' : 'bg-danger'"
+                                  th:text="${transaction.transactionType.name()}">Type</span>
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Quantity:</dt>
+                        <dd class="col-sm-8" th:text="${#numbers.formatDecimal(transaction.quantity, 0, 4)}">Quantity</dd>
+                        
+                        <dt class="col-sm-4">Price per Share:</dt>
+                        <dd class="col-sm-8" th:text="'$' + ${#numbers.formatDecimal(transaction.price, 0, 2)}">Price</dd>
+                        
+                        <dt class="col-sm-4">Total Value:</dt>
+                        <dd class="col-sm-8">
+                            <strong th:text="'$' + ${#numbers.formatDecimal(transaction.totalValue, 0, 2)}">Total</strong>
+                        </dd>
+                        
+                        <dt class="col-sm-4">Transaction ID:</dt>
+                        <dd class="col-sm-8">
+                            <small class="text-muted" th:text="${transaction.id}">ID</small>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <a href="/stock-transactions" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Transactions
+            </a>
+            <a th:href="@{/transaction-history/transaction/{id}(id=${transaction.id})}" 
+               class="btn btn-outline-primary">
+                <i class="bi bi-clock-history"></i> View History
+            </a>
+        </div>
+    </div>
+</div>
+</html>

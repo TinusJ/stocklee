@@ -35,4 +35,17 @@ public class OwnedStock {
 
     @Column(nullable = false, scale = 2)
     private BigDecimal totalValue;
+    
+    // Transient properties for calculations
+    @Transient
+    private BigDecimal currentPrice;
+    
+    @Transient
+    private BigDecimal currentValue;
+    
+    @Transient
+    private BigDecimal profitLoss;
+    
+    @Transient
+    private BigDecimal profitLossPercentage;
 }

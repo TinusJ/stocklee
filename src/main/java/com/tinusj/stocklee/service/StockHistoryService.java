@@ -22,14 +22,14 @@ public class StockHistoryService {
      * Find all stock histories.
      */
     public List<StockHistory> findAll() {
-        return stockHistoryRepository.findAll();
+        return stockHistoryRepository.findAllWithStock();
     }
 
     /**
      * Find stock history by ID.
      */
     public Optional<StockHistory> findById(UUID id) {
-        return stockHistoryRepository.findById(id);
+        return stockHistoryRepository.findByIdWithStock(id);
     }
 
     /**

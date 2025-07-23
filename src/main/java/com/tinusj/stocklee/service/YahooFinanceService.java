@@ -22,7 +22,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class YahooFinanceService {
+public class YahooFinanceService implements StockPriceProvider {
 
     private final ObjectMapper objectMapper;
 
@@ -31,7 +31,8 @@ public class YahooFinanceService {
      * For demo purposes, we'll return a mock price since Yahoo Finance API requires authentication.
      * In a production environment, this would integrate with a real financial data API.
      */
-    public Optional<BigDecimal> getCurrentPrice(String symbol) {
+    @Override
+    public Optional<BigDecimal> getPrice(String symbol) {
         try {
             // For demo purposes, return mock prices based on symbol
             return Optional.of(getMockPrice(symbol));
@@ -39,6 +40,14 @@ public class YahooFinanceService {
             log.error("Error fetching price for symbol: {}", symbol, e);
             return Optional.empty();
         }
+    }
+
+    /**
+     * Fetch current stock price for given symbol.
+     * This method provides backward compatibility and delegates to getPrice().
+     */
+    public Optional<BigDecimal> getCurrentPrice(String symbol) {
+        return getPrice(symbol);
     }
 
     /**
@@ -79,6 +88,7 @@ public class YahooFinanceService {
      * Validate if a stock symbol exists.
      * For demo purposes, we'll consider common symbols as valid.
      */
+    @Override
     public boolean isValidSymbol(String symbol) {
         if (symbol == null || symbol.trim().isEmpty()) {
             return false;

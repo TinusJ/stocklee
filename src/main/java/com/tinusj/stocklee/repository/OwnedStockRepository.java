@@ -33,4 +33,16 @@ public interface OwnedStockRepository extends JpaRepository<OwnedStock, UUID> {
      */
     @Query("SELECT os FROM OwnedStock os JOIN FETCH os.stock WHERE os.user = :user")
     List<OwnedStock> findByUserWithStockDetails(@Param("user") UserProfile user);
+    
+    /**
+     * Find all owned stocks with their associated user and stock entities.
+     */
+    @Query("SELECT os FROM OwnedStock os JOIN FETCH os.user JOIN FETCH os.stock")
+    List<OwnedStock> findAllWithUserAndStock();
+    
+    /**
+     * Find owned stock by ID with associated user and stock entities.
+     */
+    @Query("SELECT os FROM OwnedStock os JOIN FETCH os.user JOIN FETCH os.stock WHERE os.id = :id")
+    Optional<OwnedStock> findByIdWithUserAndStock(@Param("id") UUID id);
 }

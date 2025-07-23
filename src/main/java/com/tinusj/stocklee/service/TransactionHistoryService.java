@@ -22,14 +22,14 @@ public class TransactionHistoryService {
      * Find all transaction histories.
      */
     public List<TransactionHistory> findAll() {
-        return transactionHistoryRepository.findAll();
+        return transactionHistoryRepository.findAllWithTransaction();
     }
 
     /**
      * Find transaction history by ID.
      */
     public Optional<TransactionHistory> findById(UUID id) {
-        return transactionHistoryRepository.findById(id);
+        return transactionHistoryRepository.findByIdWithTransaction(id);
     }
 
     /**
