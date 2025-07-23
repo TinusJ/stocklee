@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -80,5 +81,16 @@ public class StockController {
     public ResponseEntity<Long> getStockCount() {
         long count = stockService.count();
         return ResponseEntity.ok(count);
+    }
+
+    /**
+     * Get current price for a stock symbol.
+     * Used for prepopulating purchase price in the UI.
+     */
+    @GetMapping("/price/{symbol}")
+    public ResponseEntity<BigDecimal> getCurrentPrice(@PathVariable String symbol) {
+        return stockService.getCurrentPrice(symbol.toUpperCase())
+                .map(price -> ResponseEntity.ok(price))
+                .orElse(ResponseEntity.notFound().build());
     }
 }

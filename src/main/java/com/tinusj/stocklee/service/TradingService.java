@@ -50,14 +50,18 @@ public class TradingService {
             }
 
             // Calculate number of shares (allow fractional)
-            BigDecimal currentPrice = stock.getCurrentPrice();
-            BigDecimal shares = buyStockDto.getInvestmentAmount().divide(currentPrice, 4, java.math.RoundingMode.DOWN);
+            // Use purchasePrice if provided, otherwise use current market price
+            BigDecimal priceToUse = buyStockDto.getPurchasePrice() != null 
+                    ? buyStockDto.getPurchasePrice() 
+                    : stock.getCurrentPrice();
+            
+            BigDecimal shares = buyStockDto.getInvestmentAmount().divide(priceToUse, 4, java.math.RoundingMode.DOWN);
             
             if (shares.compareTo(BigDecimal.valueOf(0.0001)) < 0) {
-                return "Investment amount too small. Minimum required: $" + currentPrice.multiply(BigDecimal.valueOf(0.0001));
+                return "Investment amount too small. Minimum required: $" + priceToUse.multiply(BigDecimal.valueOf(0.0001));
             }
 
-            BigDecimal actualCost = currentPrice.multiply(shares);
+            BigDecimal actualCost = priceToUse.multiply(shares);
 
             // Update user balance
             BigDecimal newBalance = availableBalance.subtract(actualCost);
@@ -65,7 +69,7 @@ public class TradingService {
             userProfileService.save(user);
 
             // Add shares to portfolio
-            ownedStockService.addShares(user, stock, shares, currentPrice);
+            ownedStockService.addShares(user, stock, shares, priceToUse);
 
             // Record transaction
             StockTransaction transaction = new StockTransaction();
@@ -73,13 +77,13 @@ public class TradingService {
             transaction.setStock(stock);
             transaction.setTransactionType(StockTransaction.TransactionType.BUY);
             transaction.setQuantity(shares);
-            transaction.setPrice(currentPrice);
+            transaction.setPrice(priceToUse);
             transaction.setTotalValue(actualCost);
             stockTransactionService.save(transaction);
 
             // Log activity
             String logMessage = String.format("Bought %.4f shares of %s at $%.2f per share (Total: $%.2f)", 
-                    shares, stock.getSymbol(), currentPrice, actualCost);
+                    shares, stock.getSymbol(), priceToUse, actualCost);
             logActivity(user, logMessage);
 
             return String.format("Successfully bought %.4f shares of %s for $%.2f", shares, stock.getSymbol(), actualCost);

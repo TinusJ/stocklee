@@ -5,6 +5,7 @@ import com.tinusj.stocklee.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import java.util.UUID;
 public class StockService {
 
     private final StockRepository stockRepository;
+    private final CompositeStockPriceProvider compositeStockPriceProvider;
 
     /**
      * Find all stocks.
@@ -72,5 +74,19 @@ public class StockService {
      */
     public long count() {
         return stockRepository.count();
+    }
+
+    /**
+     * Get current price for a stock symbol. 
+     * Returns the stored price if stock exists, otherwise fetches from API.
+     */
+    public Optional<BigDecimal> getCurrentPrice(String symbol) {
+        Optional<Stock> stockOpt = findBySymbol(symbol);
+        if (stockOpt.isPresent()) {
+            return Optional.of(stockOpt.get().getCurrentPrice());
+        }
+        
+        // If stock doesn't exist, fetch current price from API
+        return compositeStockPriceProvider.getPrice(symbol);
     }
 }

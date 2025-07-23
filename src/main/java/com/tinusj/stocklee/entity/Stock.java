@@ -30,6 +30,9 @@ public class Stock {
     @Column(nullable = false, scale = 2)
     private BigDecimal currentPrice;
 
+    @Column(scale = 2)
+    private BigDecimal previousPrice;
+
     @Column(length = 500)
     private String description;
 
