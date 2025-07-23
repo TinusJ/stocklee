@@ -16,6 +16,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: false
+    open-in-view: false
 
   flyway:
     enabled: true
@@ -23,9 +24,20 @@ spring:
 
   thymeleaf:
     cache: false
+    check-template-location: false
 
 server:
   port: 8080
+
+# Management endpoints for monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
 
 logging:
   level:

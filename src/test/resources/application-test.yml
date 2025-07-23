@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: stocklee-test
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    show-sql: false
+
+  flyway:
+    enabled: false
+
+logging:
+  level:
+    org.springframework: WARN
+    com.tinusj.stocklee: INFO
