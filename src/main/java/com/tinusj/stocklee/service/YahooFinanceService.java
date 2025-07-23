@@ -27,19 +27,44 @@ public class YahooFinanceService implements StockPriceProvider {
     private final ObjectMapper objectMapper;
 
     /**
-     * Fetch current stock price for given symbol.
-     * For demo purposes, we'll return a mock price since Yahoo Finance API requires authentication.
-     * In a production environment, this would integrate with a real financial data API.
+     * Fetch current stock price for given symbol from Yahoo Finance API.
      */
     @Override
     public Optional<BigDecimal> getPrice(String symbol) {
         try {
-            // For demo purposes, return mock prices based on symbol
-            return Optional.of(getMockPrice(symbol));
+            if (!isValidSymbol(symbol)) {
+                log.warn("Invalid symbol: {}", symbol);
+                return Optional.empty();
+            }
+
+            String url = String.format("https://query1.finance.yahoo.com/v8/finance/chart/%s", 
+                symbol.toUpperCase());
+
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpGet request = new HttpGet(url);
+                request.setHeader("User-Agent", "Stocklee/1.0");
+
+                HttpClientResponseHandler<String> responseHandler = response -> {
+                    int status = response.getCode();
+                    if (status >= 200 && status < 300) {
+                        HttpEntity entity = response.getEntity();
+                        return entity != null ? EntityUtils.toString(entity) : null;
+                    } else {
+                        log.warn("Yahoo Finance API returned status: {}", status);
+                        return null;
+                    }
+                };
+
+                String responseBody = httpClient.execute(request, responseHandler);
+                if (responseBody != null) {
+                    return parsePrice(responseBody);
+                }
+            }
         } catch (Exception e) {
-            log.error("Error fetching price for symbol: {}", symbol, e);
-            return Optional.empty();
+            log.error("Error fetching price from Yahoo Finance for symbol: {}", symbol, e);
         }
+        
+        return Optional.empty();
     }
 
     /**
@@ -52,7 +77,6 @@ public class YahooFinanceService implements StockPriceProvider {
 
     /**
      * Fetch stock information including name and current price.
-     * In a real implementation, this would call a financial data API.
      */
     public Optional<StockInfo> getStockInfo(String symbol) {
         try {
@@ -61,7 +85,13 @@ public class YahooFinanceService implements StockPriceProvider {
             }
             
             String upperSymbol = symbol.toUpperCase();
-            BigDecimal price = getMockPrice(upperSymbol);
+            Optional<BigDecimal> priceOpt = getPrice(upperSymbol);
+            
+            if (priceOpt.isEmpty()) {
+                return Optional.empty();
+            }
+            
+            BigDecimal price = priceOpt.get();
             String name = generateStockName(upperSymbol);
             String description = "Stock information for " + upperSymbol;
             
@@ -73,8 +103,38 @@ public class YahooFinanceService implements StockPriceProvider {
     }
 
     /**
-     * Mock price generator for demo purposes.
-     * In a real implementation, this would call Yahoo Finance API.
+     * Parse price from Yahoo Finance API response.
+     */
+    private Optional<BigDecimal> parsePrice(String responseBody) {
+        try {
+            JsonNode root = objectMapper.readTree(responseBody);
+            
+            JsonNode chart = root.get("chart");
+            if (chart == null || !chart.has("result") || chart.get("result").isEmpty()) {
+                log.warn("Invalid response format from Yahoo Finance API");
+                return Optional.empty();
+            }
+            
+            JsonNode result = chart.get("result").get(0);
+            JsonNode meta = result.get("meta");
+            
+            if (meta != null && meta.has("regularMarketPrice")) {
+                double price = meta.get("regularMarketPrice").asDouble();
+                return Optional.of(BigDecimal.valueOf(price).setScale(2, java.math.RoundingMode.HALF_UP));
+            } else {
+                log.warn("No price data found in Yahoo Finance response");
+                return Optional.empty();
+            }
+            
+        } catch (Exception e) {
+            log.error("Error parsing Yahoo Finance response", e);
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Mock price generator for fallback purposes.
+     * Used only when real API calls fail.
      */
     private BigDecimal getMockPrice(String symbol) {
         // Generate mock prices based on symbol hash for consistency
@@ -86,7 +146,6 @@ public class YahooFinanceService implements StockPriceProvider {
 
     /**
      * Validate if a stock symbol exists.
-     * For demo purposes, we'll consider common symbols as valid.
      */
     @Override
     public boolean isValidSymbol(String symbol) {
@@ -96,7 +155,7 @@ public class YahooFinanceService implements StockPriceProvider {
         
         String upperSymbol = symbol.toUpperCase().trim();
         
-        // For demo, consider symbols with 1-5 characters as valid
+        // Yahoo Finance supports symbols with 1-5 characters for most stocks
         return upperSymbol.matches("^[A-Z]{1,5}$");
     }
 

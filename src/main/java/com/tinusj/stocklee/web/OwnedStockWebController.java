@@ -3,7 +3,7 @@ package com.tinusj.stocklee.web;
 import com.tinusj.stocklee.entity.OwnedStock;
 import com.tinusj.stocklee.entity.UserProfile;
 import com.tinusj.stocklee.service.OwnedStockService;
-import com.tinusj.stocklee.service.StockPriceProvider;
+import com.tinusj.stocklee.service.CompositeStockPriceProvider;
 import com.tinusj.stocklee.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -25,7 +25,7 @@ public class OwnedStockWebController {
 
     private final OwnedStockService ownedStockService;
     private final UserProfileService userProfileService;
-    private final StockPriceProvider stockPriceProvider;
+    private final CompositeStockPriceProvider stockPriceProvider;
 
     /**
      * List all owned stocks with current prices and profit/loss calculations.
