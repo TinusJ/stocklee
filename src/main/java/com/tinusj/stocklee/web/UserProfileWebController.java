@@ -51,6 +51,7 @@ public class UserProfileWebController {
     @GetMapping("/new")
     public String showCreateForm(Model model) {
         model.addAttribute("userProfileDto", new UserProfileDto());
+        model.addAttribute("editMode", false);
         return "user-profile/form";
     }
 
@@ -63,6 +64,7 @@ public class UserProfileWebController {
                                    Model model, 
                                    RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
+            model.addAttribute("editMode", false);
             return "user-profile/form";
         }
 
