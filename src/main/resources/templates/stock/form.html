@@ -23,8 +23,7 @@
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>
-                <i class="bi bi-graph-up"></i> 
-                <span th:text="${editMode ? 'Edit Stock' : 'Create New Stock'}">Create New Stock</span>
+                <i class="bi bi-graph-up"></i> Stock Form
             </h1>
             <a href="/stocks" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Back to List
@@ -36,10 +35,10 @@
             <div class="col-lg-8">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0" th:text="${editMode ? 'Edit Stock Details' : 'Stock Information'}">Stock Information</h5>
+                        <h5 class="card-title mb-0">Stock Information</h5>
                     </div>
                     <div class="card-body">
-                        <form th:action="${editMode ? '/stocks/' + stockDto.id : '/stocks'}" 
+                        <form th:action="@{/stocks}" 
                               th:object="${stockDto}" 
                               method="post">
                             
@@ -125,8 +124,7 @@
                             <div class="d-flex justify-content-end gap-2">
                                 <a href="/stocks" class="btn btn-secondary">Cancel</a>
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check"></i>
-                                    <span th:text="${editMode ? 'Update Stock' : 'Create Stock'}">Create Stock</span>
+                                    <i class="bi bi-check"></i> Create Stock
                                 </button>
                             </div>
                         </form>
