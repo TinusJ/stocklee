@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profiles - Stock Trading Application</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-graph-up"></i> Stock Trading App
+            </a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/stocks">Stocks</a>
+                <a class="nav-link" href="/user-profiles">Users</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-person"></i> User Profiles</h1>
+            <a href="/user-profiles/new" class="btn btn-success">
+                <i class="bi bi-plus"></i> Create New User
+            </a>
+        </div>
+        
+        <!-- Flash messages -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> <span th:text="${successMessage}">Success message</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">All User Profiles</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(userProfiles)}" class="text-center py-4">
+                    <i class="bi bi-inbox display-4 text-muted"></i>
+                    <p class="mt-3 text-muted">No user profiles found. <a href="/user-profiles/new">Create the first user</a></p>
+                </div>
+                
+                <div th:unless="${#lists.isEmpty(userProfiles)}" class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Balance</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${userProfiles}">
+                                <td>
+                                    <strong th:text="${user.username}">john_doe</strong>
+                                </td>
+                                <td th:text="${user.email}">john@example.com</td>
+                                <td>
+                                    <span class="badge bg-success" th:text="'$' + ${user.balance}">$1000.00</span>
+                                </td>
+                                <td th:text="${user.createdAt != null ? user.createdAt.toString() : 'N/A'}">2024-01-01</td>
+                                <td>
+                                    <a th:href="@{/user-profiles/{id}(id=${user.id})}" class="btn btn-sm btn-outline-primary">View</a>
+                                    <a th:href="@{/user-profiles/{id}/edit(id=${user.id})}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    <form th:action="@{/user-profiles/{id}/delete(id=${user.id})}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                onclick="return confirm('Are you sure you want to delete this user?');">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
