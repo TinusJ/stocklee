@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,7 +41,7 @@
             </a>
             <div class="navbar-nav">
                 <a class="nav-link" href="/stocks">Stocks</a>
-                <a class="nav-link" href="/user-profiles">Users</a>
+                <a class="nav-link" href="/user-profiles" sec:authorize="hasRole('ADMIN')">Users</a>
                 <a class="nav-link active" href="/">Dashboard</a>
             </div>
         </div>
@@ -63,6 +63,10 @@
                     <span th:text="${currentUser.username}">Current User</span>
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                    <li><a class="dropdown-item" href="/profile">
+                        <i class="bi bi-person-gear"></i> Edit Profile
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="/logout">
                         <i class="bi bi-box-arrow-right"></i> Logout
                     </a></li>
