@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.security.Principal;
 import java.util.Set;
 
 /**
@@ -38,7 +39,12 @@ public class AuthWebController {
     @GetMapping("/login")
     public String showLoginForm(@RequestParam(value = "error", required = false) String error,
                                @RequestParam(value = "logout", required = false) String logout,
-                               Model model) {
+                               Model model, Principal principal) {
+        // If user is already authenticated, redirect to dashboard
+        if (principal != null) {
+            return "redirect:/dashboard";
+        }
+        
         model.addAttribute("loginRequest", new LoginRequest());
         
         if (error != null) {
