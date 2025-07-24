@@ -58,19 +58,26 @@ public class SecurityConfig {
                 .requestMatchers("/profile").authenticated()
                 .requestMatchers("/dashboard").authenticated()
                 .requestMatchers("/stocks/**").authenticated()
-                .requestMatchers("/transactions/**", "/transaction-history/**").authenticated()
+                .requestMatchers("/transactions/**").authenticated()
                 .requestMatchers("/owned-stocks/**").authenticated()
                 .requestMatchers("/stock-transactions/**").authenticated()
+                // Admin-only transaction history endpoints
+                .requestMatchers("/transaction-history/**").hasRole("ADMIN")
                 // Stock API endpoints require authentication
                 .requestMatchers("/api/stocks/**").authenticated()
+                // Admin-only API endpoints
+                .requestMatchers("/api/user-profiles/**").hasRole("ADMIN")
+                .requestMatchers("/api/history-logs/**").hasRole("ADMIN")
+                .requestMatchers("/api/stock-histories/**").hasRole("ADMIN")
+                .requestMatchers("/api/transaction-histories/**").hasRole("ADMIN")
                 // All other API endpoints require authentication
                 .requestMatchers("/api/**").authenticated()
                 // Allow public access to static resources, root, and actuator health
                 .requestMatchers("/", "/static/**", "/actuator/health").permitAll()  
                 // Allow access to H2 console for development
                 .requestMatchers("/h2-console/**").permitAll()
-                // All other requests require ADMIN role
-                .anyRequest().hasRole("ADMIN")
+                // All other requests require authentication
+                .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
             .formLogin(form -> form

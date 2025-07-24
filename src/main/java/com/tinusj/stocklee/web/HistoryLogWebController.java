@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +31,7 @@ public class HistoryLogWebController {
      * List all history logs with pagination and filtering.
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public String listHistoryLogs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -80,6 +82,7 @@ public class HistoryLogWebController {
      * Show history log details.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showHistoryLog(@PathVariable UUID id, Model model) {
         HistoryLog historyLog = historyLogService.findById(id)
                 .orElseThrow(() -> new RuntimeException("History log not found with id: " + id));
