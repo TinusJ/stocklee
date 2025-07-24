@@ -77,6 +77,15 @@ public class DataInitializer implements CommandLineRunner {
         adminUser.setRoles(Set.of(adminRole));
 
         userRepository.save(adminUser);
+        
+        // Create corresponding UserProfile for admin user
+        UserProfile adminProfile = new UserProfile();
+        adminProfile.setUsername("Administrator");
+        adminProfile.setEmail("admin@stocklee.com");
+        adminProfile.setBalance(BigDecimal.valueOf(50000.00)); // Admin starts with $50,000
+        
+        userProfileService.save(adminProfile);
+        
         log.info("Created default admin user with email 'admin@stocklee.com' and password 'admin'");
     }
 
