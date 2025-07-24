@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-      th:replace="layout :: layout(pageTitle=${pageTitle}, content=~{::content})">
+      th:replace="~{layout :: layout(pageTitle=${pageTitle}, content=~{::content})}">
 <head>
     <title th:text="${pageTitle}">Transaction History</title>
 </head>
