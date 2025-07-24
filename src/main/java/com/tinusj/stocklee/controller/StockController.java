@@ -16,7 +16,7 @@ import java.util.UUID;
  * REST controller for Stock entity operations.
  */
 @RestController
-@RequestMapping("/stocks")
+@RequestMapping("/api/stocks")
 @RequiredArgsConstructor
 public class StockController {
 

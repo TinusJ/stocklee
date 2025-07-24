@@ -48,6 +48,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
+            .headers(headers -> headers.frameOptions().disable()) // For H2 console
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
                 // Allow signup without authentication
@@ -57,11 +58,15 @@ public class SecurityConfig {
                 // User endpoint requires authentication (ROLE_USER or ROLE_ADMIN)
                 .requestMatchers("/user").authenticated()
                 // Stock endpoints require authentication
-                .requestMatchers("/stocks/**").authenticated()
+                .requestMatchers("/api/stocks/**").authenticated()
                 // All other API endpoints require authentication
                 .requestMatchers("/api/**").authenticated()
                 // Allow public access to static resources and actuator health
-                .requestMatchers("/", "/static/**", "/actuator/health").permitAll()
+                .requestMatchers("/", "/static/**", "/actuator/health").permitAll()  
+                // Allow access to H2 console for development
+                .requestMatchers("/h2-console/**").permitAll()
+                // Web controllers (Thymeleaf) require authentication
+                .requestMatchers("/stocks/**", "/user-profiles/**").authenticated()
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )
