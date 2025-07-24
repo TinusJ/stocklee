@@ -1,6 +1,7 @@
 package com.tinusj.stocklee.service;
 
 import com.tinusj.stocklee.entity.StockTransaction;
+import com.tinusj.stocklee.entity.UserProfile;
 import com.tinusj.stocklee.repository.StockTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -58,5 +59,12 @@ public class StockTransactionService {
      */
     public long count() {
         return stockTransactionRepository.count();
+    }
+
+    /**
+     * Find all stock transactions for a specific user.
+     */
+    public List<StockTransaction> findByUser(UserProfile user) {
+        return stockTransactionRepository.findByUserWithStockDetails(user);
     }
 }

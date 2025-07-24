@@ -9,11 +9,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -29,9 +32,11 @@ public class StockTransactionWebController {
 
     /**
      * List all stock transactions with pagination and filtering.
+     * Regular users see only their own transactions, admins see all.
      */
     @GetMapping
     public String listTransactions(
+            Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "timestamp") String sortBy,
@@ -40,18 +45,38 @@ public class StockTransactionWebController {
             @RequestParam(required = false) String transactionType,
             Model model) {
         
-        // Create pageable with sorting
-        Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        String userEmail = authentication.getName();
+        Optional<UserProfile> currentUserOpt = userProfileService.findByEmail(userEmail);
         
-        // Get all transactions for now (we can add filtering later)
-        List<StockTransaction> transactions = stockTransactionService.findAll();
+        if (currentUserOpt.isEmpty()) {
+            model.addAttribute("errorMessage", "User profile not found");
+            return "error/general";
+        }
         
-        // Filter by user if specified
-        if (userId != null) {
-            transactions = transactions.stream()
-                .filter(t -> t.getUser().getId().equals(userId))
-                .toList();
+        UserProfile currentUser = currentUserOpt.get();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        
+        List<StockTransaction> transactions;
+        
+        if (isAdmin) {
+            // Admins can see all transactions or filter by user
+            if (userId != null) {
+                Optional<UserProfile> selectedUserOpt = userProfileService.findById(userId);
+                if (selectedUserOpt.isPresent()) {
+                    transactions = stockTransactionService.findByUser(selectedUserOpt.get());
+                } else {
+                    transactions = stockTransactionService.findAll();
+                }
+            } else {
+                transactions = stockTransactionService.findAll();
+            }
+            // Get all users for admin filter dropdown
+            List<UserProfile> users = userProfileService.findAll();
+            model.addAttribute("users", users);
+        } else {
+            // Regular users see only their own transactions
+            transactions = stockTransactionService.findByUser(currentUser);
         }
         
         // Filter by transaction type if specified
@@ -61,11 +86,7 @@ public class StockTransactionWebController {
                 .toList();
         }
         
-        // Get all users for filter dropdown
-        List<UserProfile> users = userProfileService.findAll();
-        
         model.addAttribute("transactions", transactions);
-        model.addAttribute("users", users);
         model.addAttribute("currentPage", page);
         model.addAttribute("pageSize", size);
         model.addAttribute("sortBy", sortBy);
@@ -73,17 +94,37 @@ public class StockTransactionWebController {
         model.addAttribute("selectedUserId", userId);
         model.addAttribute("selectedTransactionType", transactionType);
         model.addAttribute("pageTitle", "Transactions");
+        model.addAttribute("isAdmin", isAdmin);
         
         return "transaction/list";
     }
 
     /**
      * Show transaction details.
+     * Users can only see their own transactions, admins can see all.
      */
     @GetMapping("/{id}")
-    public String showTransaction(@PathVariable UUID id, Model model) {
+    public String showTransaction(@PathVariable UUID id, Authentication authentication, Model model) {
+        String userEmail = authentication.getName();
+        Optional<UserProfile> currentUserOpt = userProfileService.findByEmail(userEmail);
+        
+        if (currentUserOpt.isEmpty()) {
+            model.addAttribute("errorMessage", "User profile not found");
+            return "error/general";
+        }
+        
+        UserProfile currentUser = currentUserOpt.get();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        
         StockTransaction transaction = stockTransactionService.findById(id)
                 .orElseThrow(() -> new RuntimeException("Transaction not found with id: " + id));
+        
+        // Check if user can access this transaction
+        if (!isAdmin && !transaction.getUser().getId().equals(currentUser.getId())) {
+            model.addAttribute("errorMessage", "Access denied: You can only view your own transactions");
+            return "error/general";
+        }
         
         model.addAttribute("transaction", transaction);
         model.addAttribute("pageTitle", "Transaction Details");

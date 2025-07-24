@@ -27,4 +27,10 @@ public interface StockTransactionRepository extends JpaRepository<StockTransacti
      */
     @Query("SELECT st FROM StockTransaction st JOIN FETCH st.user JOIN FETCH st.stock WHERE st.id = :id")
     Optional<StockTransaction> findByIdWithUserAndStock(@Param("id") UUID id);
+    
+    /**
+     * Find all stock transactions for a specific user.
+     */
+    @Query("SELECT st FROM StockTransaction st JOIN FETCH st.stock WHERE st.user = :user ORDER BY st.timestamp DESC")
+    List<StockTransaction> findByUserWithStockDetails(@Param("user") com.tinusj.stocklee.entity.UserProfile user);
 }

@@ -39,6 +39,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         initializeRoles();
         initializeAdminUser();
+        initializeRegularUser();
         initializeGuestUser();
         initializeSampleData();
     }
@@ -87,6 +88,36 @@ public class DataInitializer implements CommandLineRunner {
         userProfileService.save(adminProfile);
         
         log.info("Created default admin user with email 'admin@stocklee.com' and password 'admin'");
+    }
+
+    private void initializeRegularUser() {
+        // Check if regular user already exists
+        if (userRepository.findByEmail("user@stocklee.com").isPresent()) {
+            log.info("Regular user already exists, skipping initialization");
+            return;
+        }
+
+        // Create default regular user
+        Role userRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new RuntimeException("ROLE_USER not found"));
+
+        User regularUser = new User();
+        regularUser.setUsername("RegularUser");
+        regularUser.setEmail("user@stocklee.com");
+        regularUser.setPassword(passwordEncoder.encode("user"));
+        regularUser.setRoles(Set.of(userRole));
+
+        userRepository.save(regularUser);
+        
+        // Create corresponding UserProfile for regular user
+        UserProfile regularProfile = new UserProfile();
+        regularProfile.setUsername("RegularUser");
+        regularProfile.setEmail("user@stocklee.com");
+        regularProfile.setBalance(BigDecimal.valueOf(10000.00)); // User starts with $10,000
+        
+        userProfileService.save(regularProfile);
+        
+        log.info("Created default regular user with email 'user@stocklee.com' and password 'user'");
     }
 
     private void initializeGuestUser() {
