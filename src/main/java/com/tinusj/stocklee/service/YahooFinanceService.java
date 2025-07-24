@@ -42,7 +42,7 @@ public class YahooFinanceService implements StockPriceProvider {
 
             try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
                 HttpGet request = new HttpGet(url);
-                request.setHeader("User-Agent", "Stocklee/1.0");
+                request.setHeader("User-Agent", "Mozilla/5.0");
 
                 HttpClientResponseHandler<String> responseHandler = response -> {
                     int status = response.getCode();
