@@ -1,5 +1,7 @@
 package com.tinusj.stocklee.service;
 
+import com.tinusj.stocklee.controller.StockPriceWebSocketController;
+import com.tinusj.stocklee.dto.StockPriceUpdateDto;
 import com.tinusj.stocklee.entity.Stock;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ public class PortfolioUpdateScheduler {
 
     private final StockService stockService;
     private final CompositeStockPriceProvider compositeStockPriceProvider;
+    private final StockPriceWebSocketController webSocketController;
 
     /**
      * Scheduled task to update portfolio every 10 seconds.
@@ -52,6 +55,15 @@ public class PortfolioUpdateScheduler {
                     
                     // Save updated stock
                     stockService.save(stock);
+                    
+                    // Broadcast real-time update via WebSocket
+                    StockPriceUpdateDto priceUpdate = new StockPriceUpdateDto(
+                            stock.getSymbol(),
+                            stock.getName(),
+                            stock.getCurrentPrice(),
+                            stock.getPreviousPrice()
+                    );
+                    webSocketController.broadcastStockPriceUpdate(priceUpdate);
                     
                     successCount++;
                     log.debug("Updated price for {}: {} -> {}", 
