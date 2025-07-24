@@ -1,9 +1,8 @@
 package com.tinusj.stocklee.config;
 
-import com.tinusj.stocklee.entity.HistoryLog;
-import com.tinusj.stocklee.entity.Stock;
-import com.tinusj.stocklee.entity.StockTransaction;
-import com.tinusj.stocklee.entity.UserProfile;
+import com.tinusj.stocklee.entity.*;
+import com.tinusj.stocklee.repository.RoleRepository;
+import com.tinusj.stocklee.repository.UserRepository;
 import com.tinusj.stocklee.service.HistoryLogService;
 import com.tinusj.stocklee.service.StockService;
 import com.tinusj.stocklee.service.StockTransactionService;
@@ -12,10 +11,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 /**
  * Initializes default data when the application starts.
@@ -30,11 +31,52 @@ public class DataInitializer implements CommandLineRunner {
     private final StockService stockService;
     private final StockTransactionService stockTransactionService;
     private final HistoryLogService historyLogService;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
+        initializeRoles();
+        initializeAdminUser();
         initializeGuestUser();
         initializeSampleData();
+    }
+
+    private void initializeRoles() {
+        // Create ROLE_USER if it doesn't exist
+        if (roleRepository.findByName("ROLE_USER").isEmpty()) {
+            Role userRole = new Role("ROLE_USER");
+            roleRepository.save(userRole);
+            log.info("Created ROLE_USER");
+        }
+
+        // Create ROLE_ADMIN if it doesn't exist
+        if (roleRepository.findByName("ROLE_ADMIN").isEmpty()) {
+            Role adminRole = new Role("ROLE_ADMIN");
+            roleRepository.save(adminRole);
+            log.info("Created ROLE_ADMIN");
+        }
+    }
+
+    private void initializeAdminUser() {
+        // Check if admin user already exists
+        if (userRepository.findByUsername("admin").isPresent()) {
+            log.info("Admin user already exists, skipping initialization");
+            return;
+        }
+
+        // Create default admin user
+        Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+                .orElseThrow(() -> new RuntimeException("ROLE_ADMIN not found"));
+
+        User adminUser = new User();
+        adminUser.setUsername("admin");
+        adminUser.setPassword(passwordEncoder.encode("admin"));
+        adminUser.setRoles(Set.of(adminRole));
+
+        userRepository.save(adminUser);
+        log.info("Created default admin user with username 'admin' and password 'admin'");
     }
 
     private void initializeGuestUser() {
