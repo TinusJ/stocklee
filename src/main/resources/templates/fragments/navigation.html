@@ -26,12 +26,12 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="/stocks"><i class="bi bi-graph-up"></i> Stocks</a></li>
-                        <li><a class="dropdown-item" href="/user-profiles"><i class="bi bi-person"></i> User Profiles</a></li>
+                        <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" href="/user-profiles"><i class="bi bi-person"></i> User Profiles</a></li>
                         <li><a class="dropdown-item" href="/stock-transactions"><i class="bi bi-currency-exchange"></i> Transactions</a></li>
                         <li><a class="dropdown-item" href="/owned-stocks"><i class="bi bi-briefcase"></i> Owned Stocks</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="/history-logs"><i class="bi bi-clock-history"></i> History Logs</a></li>
-                        <li><a class="dropdown-item" href="/stock-history"><i class="bi bi-graph-down"></i> Stock History</a></li>
+                        <li sec:authorize="hasRole('ADMIN')"><hr class="dropdown-divider"></li>
+                        <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" href="/history-logs"><i class="bi bi-clock-history"></i> History Logs</a></li>
+                        <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" href="/stock-history"><i class="bi bi-graph-down"></i> Stock History</a></li>
                         <li><a class="dropdown-item" href="/transaction-history"><i class="bi bi-list-check"></i> Transaction History</a></li>
                     </ul>
                 </li>
@@ -54,6 +54,10 @@
                         <i class="bi bi-person-circle"></i> <span sec:authentication="name">User</span>
                     </a>
                     <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/profile">
+                            <i class="bi bi-person-gear"></i> Edit Profile
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/logout">
                             <i class="bi bi-box-arrow-right"></i> Logout
                         </a></li>
@@ -74,11 +78,16 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="/profile" th:classappend="${(#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/profile')) ? 'active' : ''}">
+                    <i class="bi bi-person-gear"></i> Profile
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="/stocks" th:classappend="${(#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/stocks')) ? 'active' : ''}">
                     <i class="bi bi-graph-up"></i> Stocks
                 </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                 <a class="nav-link" href="/user-profiles" th:classappend="${(#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/user-profiles')) ? 'active' : ''}">
                     <i class="bi bi-person"></i> User Profiles
                 </a>
@@ -95,10 +104,10 @@
             </li>
         </ul>
         
-        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-            <span>History</span>
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted" sec:authorize="hasRole('ADMIN')">
+            <span>Admin</span>
         </h6>
-        <ul class="nav flex-column mb-2">
+        <ul class="nav flex-column mb-2" sec:authorize="hasRole('ADMIN')">
             <li class="nav-item">
                 <a class="nav-link" href="/history-logs" th:classappend="${(#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/history-logs')) ? 'active' : ''}">
                     <i class="bi bi-clock-history"></i> History Logs
@@ -109,6 +118,12 @@
                     <i class="bi bi-graph-down"></i> Stock History
                 </a>
             </li>
+        </ul>
+        
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+            <span>History</span>
+        </h6>
+        <ul class="nav flex-column mb-2">
             <li class="nav-item">
                 <a class="nav-link" href="/transaction-history" th:classappend="${(#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/transaction-history')) ? 'active' : ''}">
                     <i class="bi bi-list-check"></i> Transaction History

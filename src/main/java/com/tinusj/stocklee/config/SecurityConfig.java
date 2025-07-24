@@ -50,20 +50,27 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/signup").permitAll()
                 // Admin endpoints require ROLE_ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                // User endpoint requires authentication (ROLE_USER or ROLE_ADMIN)
-                .requestMatchers("/user").authenticated()
-                // Stock endpoints require authentication
+                // Admin-only web endpoints
+                .requestMatchers("/user-profiles/**").hasRole("ADMIN")
+                .requestMatchers("/history-logs/**").hasRole("ADMIN")
+                .requestMatchers("/stock-history/**").hasRole("ADMIN")
+                // User endpoints - accessible to authenticated users (both USER and ADMIN)
+                .requestMatchers("/profile").authenticated()
+                .requestMatchers("/dashboard").authenticated()
+                .requestMatchers("/stocks/**").authenticated()
+                .requestMatchers("/transactions/**", "/transaction-history/**").authenticated()
+                .requestMatchers("/owned-stocks/**").authenticated()
+                .requestMatchers("/stock-transactions/**").authenticated()
+                // Stock API endpoints require authentication
                 .requestMatchers("/api/stocks/**").authenticated()
                 // All other API endpoints require authentication
                 .requestMatchers("/api/**").authenticated()
-                // Allow public access to static resources and actuator health
+                // Allow public access to static resources, root, and actuator health
                 .requestMatchers("/", "/static/**", "/actuator/health").permitAll()  
                 // Allow access to H2 console for development
                 .requestMatchers("/h2-console/**").permitAll()
-                // Web controllers (Thymeleaf) require authentication
-                .requestMatchers("/stocks/**", "/user-profiles/**", "/dashboard").authenticated()
-                // All other requests require authentication
-                .anyRequest().authenticated()
+                // All other requests require ADMIN role
+                .anyRequest().hasRole("ADMIN")
             )
             .authenticationProvider(authenticationProvider())
             .formLogin(form -> form

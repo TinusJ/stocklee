@@ -6,6 +6,7 @@ import com.tinusj.stocklee.service.OwnedStockService;
 import com.tinusj.stocklee.service.CompositeStockPriceProvider;
 import com.tinusj.stocklee.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -29,26 +31,50 @@ public class OwnedStockWebController {
 
     /**
      * List all owned stocks with current prices and profit/loss calculations.
+     * Regular users see only their own stocks, admins can see all.
      */
     @GetMapping
     public String listOwnedStocks(
+            Authentication authentication,
             @RequestParam(required = false) UUID userId,
             Model model) {
         
-        List<OwnedStock> ownedStocks = ownedStockService.findAll();
+        String userEmail = authentication.getName();
+        Optional<UserProfile> currentUserOpt = userProfileService.findByEmail(userEmail);
         
-        // Filter by user if specified
-        if (userId != null) {
-            ownedStocks = ownedStocks.stream()
-                .filter(os -> os.getUser().getId().equals(userId))
-                .toList();
+        if (currentUserOpt.isEmpty()) {
+            model.addAttribute("errorMessage", "User profile not found");
+            return "error/general";
+        }
+        
+        UserProfile currentUser = currentUserOpt.get();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        
+        List<OwnedStock> ownedStocks;
+        
+        if (isAdmin) {
+            // Admins can see all owned stocks or filter by user
+            if (userId != null) {
+                Optional<UserProfile> selectedUserOpt = userProfileService.findById(userId);
+                if (selectedUserOpt.isPresent()) {
+                    ownedStocks = ownedStockService.findByUser(selectedUserOpt.get());
+                } else {
+                    ownedStocks = ownedStockService.findAll();
+                }
+            } else {
+                ownedStocks = ownedStockService.findAll();
+            }
+            // Get all users for admin filter dropdown
+            List<UserProfile> users = userProfileService.findAll();
+            model.addAttribute("users", users);
+        } else {
+            // Regular users see only their own stocks
+            ownedStocks = ownedStockService.findByUser(currentUser);
         }
         
         // Calculate current values and profit/loss for each owned stock
         ownedStocks.forEach(this::calculateCurrentValues);
-        
-        // Get all users for filter dropdown
-        List<UserProfile> users = userProfileService.findAll();
         
         // Calculate totals
         BigDecimal totalInvestment = ownedStocks.stream()
@@ -66,23 +92,42 @@ public class OwnedStockWebController {
         BigDecimal totalProfitLoss = totalCurrentValue.subtract(totalInvestment);
         
         model.addAttribute("ownedStocks", ownedStocks);
-        model.addAttribute("users", users);
         model.addAttribute("selectedUserId", userId);
         model.addAttribute("totalInvestment", totalInvestment);
         model.addAttribute("totalCurrentValue", totalCurrentValue);
         model.addAttribute("totalProfitLoss", totalProfitLoss);
         model.addAttribute("pageTitle", "Owned Stocks");
+        model.addAttribute("isAdmin", isAdmin);
         
         return "owned-stock/list";
     }
 
     /**
      * Show owned stock details.
+     * Users can only see their own stocks, admins can see all.
      */
     @GetMapping("/{id}")
-    public String showOwnedStock(@PathVariable UUID id, Model model) {
+    public String showOwnedStock(@PathVariable UUID id, Authentication authentication, Model model) {
+        String userEmail = authentication.getName();
+        Optional<UserProfile> currentUserOpt = userProfileService.findByEmail(userEmail);
+        
+        if (currentUserOpt.isEmpty()) {
+            model.addAttribute("errorMessage", "User profile not found");
+            return "error/general";
+        }
+        
+        UserProfile currentUser = currentUserOpt.get();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        
         OwnedStock ownedStock = ownedStockService.findById(id)
                 .orElseThrow(() -> new RuntimeException("Owned stock not found with id: " + id));
+        
+        // Check if user can access this owned stock
+        if (!isAdmin && !ownedStock.getUser().getId().equals(currentUser.getId())) {
+            model.addAttribute("errorMessage", "Access denied: You can only view your own owned stocks");
+            return "error/general";
+        }
         
         calculateCurrentValues(ownedStock);
         
