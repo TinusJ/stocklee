@@ -29,14 +29,20 @@ public class AuthController {
      */
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignupRequest signupRequest) {
-        if (userRepository.existsByUsername(signupRequest.getUsername())) {
+        if (userRepository.existsByEmail(signupRequest.getEmail())) {
             return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
+                    .body(new MessageResponse("Error: Email is already in use!"));
+        }
+
+        if (!signupRequest.getPassword().equals(signupRequest.getConfirmPassword())) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error: Passwords do not match!"));
         }
 
         // Create new user with ROLE_USER
         User user = new User();
-        user.setUsername(signupRequest.getUsername());
+        user.setUsername(signupRequest.getFullName()); // Use full name as username
+        user.setEmail(signupRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
 
         Role userRole = roleRepository.findByName("ROLE_USER")

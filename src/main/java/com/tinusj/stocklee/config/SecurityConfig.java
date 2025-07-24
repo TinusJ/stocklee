@@ -42,9 +42,11 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
             .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) // For H2 console
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(authz -> authz
-                // Allow signup without authentication
+                // Allow public access to auth pages
+                .requestMatchers("/login", "/register", "/users/create").permitAll()
+                // Allow signup without authentication (REST API)
                 .requestMatchers(HttpMethod.POST, "/signup").permitAll()
                 // Admin endpoints require ROLE_ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -59,12 +61,28 @@ public class SecurityConfig {
                 // Allow access to H2 console for development
                 .requestMatchers("/h2-console/**").permitAll()
                 // Web controllers (Thymeleaf) require authentication
-                .requestMatchers("/stocks/**", "/user-profiles/**").authenticated()
+                .requestMatchers("/stocks/**", "/user-profiles/**", "/dashboard").authenticated()
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
-            .httpBasic(httpBasic -> {});
+            .formLogin(form -> form
+                .loginPage("/login")
+                .loginProcessingUrl("/login")
+                .usernameParameter("email")
+                .passwordParameter("password")
+                .defaultSuccessUrl("/dashboard", true)
+                .failureUrl("/login?error=true")
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout=true")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+                .permitAll()
+            )
+            .httpBasic(httpBasic -> {}); // Keep HTTP Basic for API endpoints
 
         return http.build();
     }
