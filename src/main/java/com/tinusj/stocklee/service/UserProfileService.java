@@ -73,9 +73,23 @@ public class UserProfileService {
     }
 
     /**
+     * Find user profile by email.
+     */
+    public Optional<UserProfile> findByEmail(String email) {
+        return userProfileRepository.findByEmail(email);
+    }
+
+    /**
      * Check if a user with the given username exists.
      */
     public boolean existsByUsername(String username) {
         return userProfileRepository.existsByUsername(username);
+    }
+
+    /**
+     * Check if a user with the given email exists.
+     */
+    public boolean existsByEmail(String email) {
+        return userProfileRepository.existsByEmail(email);
     }
 }

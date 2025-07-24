@@ -61,7 +61,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initializeAdminUser() {
         // Check if admin user already exists
-        if (userRepository.findByUsername("admin").isPresent()) {
+        if (userRepository.findByEmail("admin@stocklee.com").isPresent()) {
             log.info("Admin user already exists, skipping initialization");
             return;
         }
@@ -71,12 +71,13 @@ public class DataInitializer implements CommandLineRunner {
                 .orElseThrow(() -> new RuntimeException("ROLE_ADMIN not found"));
 
         User adminUser = new User();
-        adminUser.setUsername("admin");
+        adminUser.setUsername("Administrator");
+        adminUser.setEmail("admin@stocklee.com");
         adminUser.setPassword(passwordEncoder.encode("admin"));
         adminUser.setRoles(Set.of(adminRole));
 
         userRepository.save(adminUser);
-        log.info("Created default admin user with username 'admin' and password 'admin'");
+        log.info("Created default admin user with email 'admin@stocklee.com' and password 'admin'");
     }
 
     private void initializeGuestUser() {

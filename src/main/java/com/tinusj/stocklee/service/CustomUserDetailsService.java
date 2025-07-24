@@ -23,16 +23,17 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(usernameOrEmail)
+                .or(() -> userRepository.findByUsername(usernameOrEmail))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + usernameOrEmail));
 
         Set<GrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toSet());
 
         return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
+                .username(user.getEmail()) // Use email as the username for authentication
                 .password(user.getPassword())
                 .authorities(authorities)
                 .build();

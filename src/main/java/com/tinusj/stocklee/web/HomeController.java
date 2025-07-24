@@ -8,15 +8,14 @@ import com.tinusj.stocklee.service.TradingService;
 import com.tinusj.stocklee.service.UserProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Home page controller.
@@ -29,43 +28,58 @@ public class HomeController {
     private final TradingService tradingService;
 
     @GetMapping("/")
-    public String home(@RequestParam(required = false) UUID userId, Model model) {
-        List<UserProfile> users = userProfileService.findAll();
-        model.addAttribute("users", users);
+    public String home(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+        return "redirect:/dashboard";
+    }
+
+    @GetMapping("/dashboard")
+    public String dashboard(Authentication authentication, Model model) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        String userEmail = authentication.getName(); // This will be the email since we set it as username in UserDetailsService
+        Optional<UserProfile> userOpt = userProfileService.findByEmail(userEmail);
         
-        if (userId != null) {
-            Optional<UserProfile> userOpt = userProfileService.findById(userId);
-            if (userOpt.isPresent()) {
-                UserProfile user = userOpt.get();
-                PortfolioSummaryDto portfolio = tradingService.getPortfolioSummary(user);
-                
-                model.addAttribute("selectedUser", user);
-                model.addAttribute("portfolio", portfolio);
-                model.addAttribute("buyStockDto", new BuyStockDto());
-                model.addAttribute("sellStockDto", new SellStockDto());
-                return "dashboard";
-            }
+        if (userOpt.isEmpty()) {
+            model.addAttribute("errorMessage", "User profile not found. Please contact support.");
+            return "error/general";
         }
         
-        // If no user selected or user not found, show user selection
-        return "index";
+        UserProfile user = userOpt.get();
+        PortfolioSummaryDto portfolio = tradingService.getPortfolioSummary(user);
+        
+        model.addAttribute("currentUser", user);
+        model.addAttribute("portfolio", portfolio);
+        model.addAttribute("buyStockDto", new BuyStockDto());
+        model.addAttribute("sellStockDto", new SellStockDto());
+        
+        return "dashboard";
     }
 
     @PostMapping("/buy-stock")
-    public String buyStock(@RequestParam UUID userId,
+    public String buyStock(Authentication authentication,
                           @Valid @ModelAttribute BuyStockDto buyStockDto,
                           BindingResult result,
                           RedirectAttributes redirectAttributes) {
         
-        Optional<UserProfile> userOpt = userProfileService.findById(userId);
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        String userEmail = authentication.getName();
+        Optional<UserProfile> userOpt = userProfileService.findByEmail(userEmail);
         if (userOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "User not found");
-            return "redirect:/";
+            redirectAttributes.addFlashAttribute("errorMessage", "User profile not found");
+            return "redirect:/dashboard";
         }
 
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Invalid buy request: " + result.getAllErrors().get(0).getDefaultMessage());
-            return "redirect:/?userId=" + userId;
+            return "redirect:/dashboard";
         }
 
         String resultMessage = tradingService.buyStock(userOpt.get(), buyStockDto);
@@ -76,24 +90,29 @@ public class HomeController {
             redirectAttributes.addFlashAttribute("errorMessage", resultMessage);
         }
         
-        return "redirect:/?userId=" + userId;
+        return "redirect:/dashboard";
     }
 
     @PostMapping("/sell-stock")
-    public String sellStock(@RequestParam UUID userId,
+    public String sellStock(Authentication authentication,
                            @Valid @ModelAttribute SellStockDto sellStockDto,
                            BindingResult result,
                            RedirectAttributes redirectAttributes) {
         
-        Optional<UserProfile> userOpt = userProfileService.findById(userId);
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        String userEmail = authentication.getName();
+        Optional<UserProfile> userOpt = userProfileService.findByEmail(userEmail);
         if (userOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "User not found");
-            return "redirect:/";
+            redirectAttributes.addFlashAttribute("errorMessage", "User profile not found");
+            return "redirect:/dashboard";
         }
 
         if (result.hasErrors()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Invalid sell request: " + result.getAllErrors().get(0).getDefaultMessage());
-            return "redirect:/?userId=" + userId;
+            return "redirect:/dashboard";
         }
 
         String resultMessage = tradingService.sellStock(userOpt.get(), sellStockDto);
@@ -104,6 +123,6 @@ public class HomeController {
             redirectAttributes.addFlashAttribute("errorMessage", resultMessage);
         }
         
-        return "redirect:/?userId=" + userId;
+        return "redirect:/dashboard";
     }
 }
