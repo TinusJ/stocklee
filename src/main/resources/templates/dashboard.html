@@ -6,6 +6,32 @@
     <title>Portfolio Dashboard - Stock Trading Application</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .price-change {
+            animation: priceFlash 1s ease-in-out;
+        }
+        
+        @keyframes priceFlash {
+            0% { background-color: transparent; }
+            50% { background-color: rgba(255, 255, 0, 0.3); }
+            100% { background-color: transparent; }
+        }
+        
+        .websocket-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
+        
+        .websocket-connected {
+            color: #28a745;
+        }
+        
+        .websocket-disconnected {
+            color: #dc3545;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -20,6 +46,13 @@
             </div>
         </div>
     </nav>
+    
+    <!-- WebSocket Status Indicator -->
+    <div class="websocket-status">
+        <span id="websocket-indicator" class="badge websocket-disconnected">
+            <i class="bi bi-wifi-off"></i> Disconnected
+        </span>
+    </div>
 
     <div class="container mt-4">
         <!-- User Selection -->
@@ -193,6 +226,22 @@
                             </div>
                             <div class="form-text">Available balance: $<span th:text="${#numbers.formatDecimal(portfolio.availableBalance, 1, 2)}">0.00</span></div>
                         </div>
+                        
+                        <div class="mb-3">
+                            <label for="purchasePrice" class="form-label">Purchase Price (per share)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="purchasePrice" th:field="*{purchasePrice}" 
+                                       step="0.01" min="0.01" placeholder="0.00">
+                                <button class="btn btn-outline-secondary" type="button" id="getCurrentPriceBtn">
+                                    <i class="bi bi-arrow-clockwise"></i> Current Price
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                <span id="currentPriceDisplay">Leave empty to use current market price</span>
+                                <br><small class="text-muted">You can override this if you purchased at a different time/price</small>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -243,6 +292,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
     <script>
         let currentMaxShares = 0;
 
@@ -278,6 +329,175 @@
         // Auto-uppercase stock symbol input
         document.getElementById('symbol').addEventListener('input', function(e) {
             e.target.value = e.target.value.toUpperCase();
+            // Clear purchase price when symbol changes
+            document.getElementById('purchasePrice').value = '';
+            document.getElementById('currentPriceDisplay').textContent = 'Leave empty to use current market price';
+        });
+
+        // Get current price button functionality
+        document.getElementById('getCurrentPriceBtn').addEventListener('click', async function() {
+            const symbol = document.getElementById('symbol').value.trim();
+            if (!symbol) {
+                alert('Please enter a stock symbol first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/stocks/price/${symbol}`);
+                if (response.ok) {
+                    const priceData = await response.json();
+                    document.getElementById('purchasePrice').value = priceData.currentPrice.toFixed(2);
+                    document.getElementById('currentPriceDisplay').innerHTML = 
+                        `Current market price: <strong>$${priceData.currentPrice.toFixed(2)}</strong>`;
+                } else {
+                    document.getElementById('currentPriceDisplay').innerHTML = 
+                        '<span class="text-danger">Could not fetch current price for ' + symbol + '</span>';
+                }
+            } catch (error) {
+                console.error('Error fetching stock price:', error);
+                document.getElementById('currentPriceDisplay').innerHTML = 
+                    '<span class="text-danger">Error fetching current price</span>';
+            }
+        });
+
+        // WebSocket connection for real-time stock price updates
+        let stompClient = null;
+        
+        function connectWebSocket() {
+            const socket = new SockJS('/ws');
+            stompClient = new StompJs.Client({
+                webSocketFactory: () => socket,
+                reconnectDelay: 5000,
+                debug: function (str) {
+                    console.log('STOMP: ' + str);
+                }
+            });
+
+            stompClient.onConnect = function (frame) {
+                console.log('Connected to WebSocket: ' + frame);
+                
+                // Update connection status
+                const indicator = document.getElementById('websocket-indicator');
+                indicator.className = 'badge websocket-connected';
+                indicator.innerHTML = '<i class="bi bi-wifi"></i> Live Updates';
+                
+                // Subscribe to general stock price updates
+                stompClient.subscribe('/topic/stock-prices', function (priceUpdate) {
+                    const update = JSON.parse(priceUpdate.body);
+                    updateStockPriceInUI(update);
+                });
+            };
+
+            stompClient.onStompError = function (frame) {
+                console.error('WebSocket error: ' + frame.headers['message']);
+                console.error('Additional details: ' + frame.body);
+                
+                // Update connection status
+                const indicator = document.getElementById('websocket-indicator');
+                indicator.className = 'badge websocket-disconnected';
+                indicator.innerHTML = '<i class="bi bi-wifi-off"></i> Disconnected';
+            };
+
+            stompClient.activate();
+        }
+
+        function updateStockPriceInUI(priceUpdate) {
+            // Update current price in portfolio table
+            const portfolioRows = document.querySelectorAll('tbody tr');
+            portfolioRows.forEach(row => {
+                const symbolElement = row.querySelector('strong');
+                if (symbolElement && symbolElement.textContent === priceUpdate.symbol) {
+                    // Update current price
+                    const currentPriceCell = row.cells[3]; // Current Price column
+                    currentPriceCell.textContent = '$' + parseFloat(priceUpdate.currentPrice).toFixed(2);
+                    
+                    // Add visual indicator for price change
+                    currentPriceCell.classList.remove('text-success', 'text-danger', 'price-change');
+                    if (priceUpdate.priceChange > 0) {
+                        currentPriceCell.classList.add('text-success', 'price-change');
+                    } else if (priceUpdate.priceChange < 0) {
+                        currentPriceCell.classList.add('text-danger', 'price-change');
+                    }
+                    
+                    // Update current value and profit/loss calculations
+                    const quantityText = row.cells[1].textContent;
+                    const quantity = parseFloat(quantityText);
+                    const newCurrentValue = quantity * priceUpdate.currentPrice;
+                    const currentValueCell = row.cells[5]; // Current Value column
+                    currentValueCell.textContent = '$' + newCurrentValue.toFixed(2);
+                    
+                    // Update profit/loss
+                    const investmentText = row.cells[4].textContent.replace('$', '');
+                    const investment = parseFloat(investmentText);
+                    const profitLoss = newCurrentValue - investment;
+                    const profitLossPercentage = investment > 0 ? (profitLoss / investment) * 100 : 0;
+                    
+                    const profitLossCell = row.cells[6]; // Profit/Loss column
+                    profitLossCell.innerHTML = `
+                        <span class="${profitLoss >= 0 ? 'text-success' : 'text-danger'}">
+                            ${profitLoss >= 0 ? '+' : '-'}$${Math.abs(profitLoss).toFixed(2)}
+                            <br>
+                            <small>(${profitLossPercentage.toFixed(2)}%)</small>
+                        </span>
+                    `;
+                }
+            });
+
+            // Update portfolio summary totals
+            updatePortfolioSummary();
+            
+            console.log('Updated price for ' + priceUpdate.symbol + ': $' + priceUpdate.currentPrice);
+        }
+
+        function updatePortfolioSummary() {
+            // Recalculate portfolio totals
+            let totalCurrentValue = 0;
+            let totalInvestment = 0;
+            
+            const portfolioRows = document.querySelectorAll('tbody tr');
+            portfolioRows.forEach(row => {
+                const currentValueText = row.cells[5].textContent.replace('$', '');
+                const investmentText = row.cells[4].textContent.replace('$', '');
+                totalCurrentValue += parseFloat(currentValueText) || 0;
+                totalInvestment += parseFloat(investmentText) || 0;
+            });
+            
+            // Update Current Value card
+            const currentValueCard = document.querySelector('.bg-secondary .card-body h4');
+            if (currentValueCard) {
+                currentValueCard.textContent = '$' + totalCurrentValue.toFixed(2);
+            }
+            
+            // Update Profit/Loss card
+            const profitLoss = totalCurrentValue - totalInvestment;
+            const profitLossPercentage = totalInvestment > 0 ? (profitLoss / totalInvestment) * 100 : 0;
+            
+            const profitLossCard = document.querySelector('.bg-success .card-body, .bg-danger .card-body');
+            if (profitLossCard) {
+                const card = profitLossCard.closest('.card');
+                card.className = 'card text-white ' + (profitLoss >= 0 ? 'bg-success' : 'bg-danger');
+                
+                const icon = profitLossCard.querySelector('i');
+                icon.className = 'bi display-4 mb-2 ' + (profitLoss >= 0 ? 'bi-arrow-up' : 'bi-arrow-down');
+                
+                const valueElement = profitLossCard.querySelector('h4');
+                valueElement.textContent = (profitLoss >= 0 ? '+' : '-') + '$' + Math.abs(profitLoss).toFixed(2);
+                
+                const percentageElement = profitLossCard.querySelector('small');
+                percentageElement.textContent = '(' + profitLossPercentage.toFixed(2) + '%)';
+            }
+        }
+
+        // Connect to WebSocket when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            connectWebSocket();
+        });
+
+        // Disconnect WebSocket when page unloads
+        window.addEventListener('beforeunload', function() {
+            if (stompClient !== null) {
+                stompClient.deactivate();
+            }
         });
     </script>
 </body>

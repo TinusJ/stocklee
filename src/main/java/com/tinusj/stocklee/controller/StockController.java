@@ -1,5 +1,6 @@
 package com.tinusj.stocklee.controller;
 
+import com.tinusj.stocklee.dto.CurrentPriceDto;
 import com.tinusj.stocklee.entity.Stock;
 import com.tinusj.stocklee.service.StockService;
 import lombok.RequiredArgsConstructor;
@@ -88,9 +89,36 @@ public class StockController {
      * Used for prepopulating purchase price in the UI.
      */
     @GetMapping("/price/{symbol}")
-    public ResponseEntity<BigDecimal> getCurrentPrice(@PathVariable String symbol) {
-        return stockService.getCurrentPrice(symbol.toUpperCase())
-                .map(price -> ResponseEntity.ok(price))
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<CurrentPriceDto> getCurrentPrice(@PathVariable String symbol) {
+        String upperSymbol = symbol.toUpperCase();
+        
+        // First try to get from database (existing stock)
+        var stockOpt = stockService.findBySymbol(upperSymbol);
+        if (stockOpt.isPresent()) {
+            Stock stock = stockOpt.get();
+            CurrentPriceDto dto = new CurrentPriceDto(
+                stock.getSymbol(),
+                stock.getName(),
+                stock.getCurrentPrice(),
+                stock.getPreviousPrice(),
+                true
+            );
+            return ResponseEntity.ok(dto);
+        }
+        
+        // If not in database, try to fetch from API
+        var priceOpt = stockService.getCurrentPrice(upperSymbol);
+        if (priceOpt.isPresent()) {
+            CurrentPriceDto dto = new CurrentPriceDto(
+                upperSymbol,
+                upperSymbol, // We don't have name from API call
+                priceOpt.get(),
+                null,
+                false
+            );
+            return ResponseEntity.ok(dto);
+        }
+        
+        return ResponseEntity.notFound().build();
     }
 }
