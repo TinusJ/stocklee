@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(pageTitle, content)">
 <head th:replace="fragments/head :: head"></head>
 <body>
 
@@ -37,7 +37,7 @@
             </div>
             
             <!-- Page content -->
-            <div th:block="${content}">
+            <div th:replace="${content}">
                 <!-- Main content will be inserted here -->
             </div>
         </main>
