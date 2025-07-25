@@ -1,16 +1,22 @@
 package com.tinusj.stocklee.controller;
 
 import com.tinusj.stocklee.dto.CurrentPriceDto;
+import com.tinusj.stocklee.dto.HistoricalStockDataDto;
 import com.tinusj.stocklee.entity.Stock;
+import com.tinusj.stocklee.entity.StockHistory;
 import com.tinusj.stocklee.service.StockService;
+import com.tinusj.stocklee.service.StockHistoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for Stock entity operations.
@@ -21,6 +27,7 @@ import java.util.UUID;
 public class StockController {
 
     private final StockService stockService;
+    private final StockHistoryService stockHistoryService;
 
     /**
      * Get all stocks.
@@ -120,5 +127,93 @@ public class StockController {
         }
         
         return ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Get latest stock data including current price.
+     * This endpoint provides the most recent stock information.
+     */
+    @GetMapping("/{symbol}/latest")
+    public ResponseEntity<CurrentPriceDto> getLatestStockData(@PathVariable String symbol) {
+        return getCurrentPrice(symbol);
+    }
+
+    /**
+     * Get historical data for a stock within a date range.
+     */
+    @GetMapping("/{symbol}/historical")
+    public ResponseEntity<List<HistoricalStockDataDto>> getHistoricalData(
+            @PathVariable String symbol,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        
+        String upperSymbol = symbol.toUpperCase();
+        
+        List<StockHistory> historicalData = stockHistoryService.getHistoricalData(upperSymbol, fromDate, toDate);
+        
+        List<HistoricalStockDataDto> dtoList = historicalData.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(dtoList);
+    }
+
+    /**
+     * Get historical data for the last N days.
+     */
+    @GetMapping("/{symbol}/historical/last/{days}")
+    public ResponseEntity<List<HistoricalStockDataDto>> getHistoricalDataLastDays(
+            @PathVariable String symbol,
+            @PathVariable int days) {
+        
+        LocalDate toDate = LocalDate.now();
+        LocalDate fromDate = toDate.minusDays(days);
+        
+        return getHistoricalData(symbol, fromDate, toDate);
+    }
+
+    /**
+     * Fetch and store historical data from external API.
+     */
+    @PostMapping("/{symbol}/fetch-historical")
+    public ResponseEntity<String> fetchHistoricalData(
+            @PathVariable String symbol,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+        
+        String upperSymbol = symbol.toUpperCase();
+        
+        // Default to last 30 days if dates not provided
+        if (fromDate == null) {
+            fromDate = LocalDate.now().minusDays(30);
+        }
+        if (toDate == null) {
+            toDate = LocalDate.now();
+        }
+        
+        var stockOpt = stockService.findBySymbol(upperSymbol);
+        if (stockOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        Stock stock = stockOpt.get();
+        stockHistoryService.fetchAndStoreHistoricalData(stock, fromDate, toDate);
+        
+        return ResponseEntity.ok("Historical data fetch initiated for " + upperSymbol);
+    }
+
+    /**
+     * Convert StockHistory entity to DTO.
+     */
+    private HistoricalStockDataDto convertToDto(StockHistory stockHistory) {
+        return new HistoricalStockDataDto(
+                stockHistory.getStock().getSymbol(),
+                stockHistory.getDate(),
+                stockHistory.getOpenPrice(),
+                stockHistory.getHighPrice(),
+                stockHistory.getLowPrice(),
+                stockHistory.getClosePrice(),
+                stockHistory.getVolume()
+        );
     }
 }
