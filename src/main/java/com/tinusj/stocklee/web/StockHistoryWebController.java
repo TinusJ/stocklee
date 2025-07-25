@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,7 @@ public class StockHistoryWebController {
      * List stock history with filtering by stock symbol.
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public String listStockHistory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
@@ -91,6 +93,7 @@ public class StockHistoryWebController {
      * Show detailed stock history for a specific stock.
      */
     @GetMapping("/stock/{stockId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showStockHistory(@PathVariable UUID stockId, Model model) {
         Stock stock = stockService.findById(stockId)
                 .orElseThrow(() -> new RuntimeException("Stock not found with id: " + stockId));

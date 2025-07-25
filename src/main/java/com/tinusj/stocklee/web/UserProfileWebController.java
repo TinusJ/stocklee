@@ -5,6 +5,7 @@ import com.tinusj.stocklee.entity.UserProfile;
 import com.tinusj.stocklee.service.UserProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -28,6 +29,7 @@ public class UserProfileWebController {
      * List all user profiles
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public String listUserProfiles(Model model) {
         List<UserProfile> userProfiles = userProfileService.findAll();
         model.addAttribute("userProfiles", userProfiles);
@@ -38,6 +40,7 @@ public class UserProfileWebController {
      * Show user profile details
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showUserProfile(@PathVariable UUID id, Model model) {
         UserProfile userProfile = userProfileService.findById(id)
                 .orElseThrow(() -> new RuntimeException("User profile not found with id: " + id));
@@ -49,6 +52,7 @@ public class UserProfileWebController {
      * Show create user profile form
      */
     @GetMapping("/new")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showCreateForm(Model model) {
         model.addAttribute("userProfileDto", new UserProfileDto());
         model.addAttribute("editMode", false);
@@ -59,6 +63,7 @@ public class UserProfileWebController {
      * Create new user profile
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public String createUserProfile(@Valid @ModelAttribute UserProfileDto userProfileDto, 
                                    BindingResult result, 
                                    Model model, 
@@ -79,6 +84,7 @@ public class UserProfileWebController {
      * Show edit user profile form
      */
     @GetMapping("/{id}/edit")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showEditForm(@PathVariable UUID id, Model model) {
         UserProfile userProfile = userProfileService.findById(id)
                 .orElseThrow(() -> new RuntimeException("User profile not found with id: " + id));
@@ -93,6 +99,7 @@ public class UserProfileWebController {
      * Update user profile
      */
     @PostMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String updateUserProfile(@PathVariable UUID id, 
                                    @Valid @ModelAttribute UserProfileDto userProfileDto, 
                                    BindingResult result, 
@@ -115,6 +122,7 @@ public class UserProfileWebController {
      * Delete user profile
      */
     @PostMapping("/{id}/delete")
+    @PreAuthorize("hasRole('ADMIN')")
     public String deleteUserProfile(@PathVariable UUID id, RedirectAttributes redirectAttributes) {
         userProfileService.deleteById(id);
         redirectAttributes.addFlashAttribute("successMessage", "User profile deleted successfully!");

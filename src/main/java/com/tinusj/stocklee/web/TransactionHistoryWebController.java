@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,7 @@ public class TransactionHistoryWebController {
      * List all transaction history with pagination and filtering.
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public String listTransactionHistory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -101,6 +103,7 @@ public class TransactionHistoryWebController {
      * Show transaction history details.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showTransactionHistory(@PathVariable UUID id, Model model) {
         TransactionHistory transactionHistory = transactionHistoryService.findById(id)
                 .orElseThrow(() -> new RuntimeException("Transaction history not found with id: " + id));
@@ -115,6 +118,7 @@ public class TransactionHistoryWebController {
      * Show detailed transaction history for a specific transaction.
      */
     @GetMapping("/transaction/{transactionId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showTransactionHistoryByTransaction(@PathVariable UUID transactionId, Model model) {
         StockTransaction transaction = stockTransactionService.findById(transactionId)
                 .orElseThrow(() -> new RuntimeException("Transaction not found with id: " + transactionId));

@@ -32,7 +32,7 @@
                         <li sec:authorize="hasRole('ADMIN')"><hr class="dropdown-divider"></li>
                         <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" href="/history-logs"><i class="bi bi-clock-history"></i> History Logs</a></li>
                         <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" href="/stock-history"><i class="bi bi-graph-down"></i> Stock History</a></li>
-                        <li><a class="dropdown-item" href="/transaction-history"><i class="bi bi-list-check"></i> Transaction History</a></li>
+                        <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" href="/transaction-history"><i class="bi bi-list-check"></i> Transaction History</a></li>
                     </ul>
                 </li>
             </ul>
@@ -120,10 +120,10 @@
             </li>
         </ul>
         
-        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted" sec:authorize="hasRole('ADMIN')">
             <span>History</span>
         </h6>
-        <ul class="nav flex-column mb-2">
+        <ul class="nav flex-column mb-2" sec:authorize="hasRole('ADMIN')">
             <li class="nav-item">
                 <a class="nav-link" href="/transaction-history" th:classappend="${(#httpServletRequest != null and #strings.contains(#httpServletRequest.requestURI, '/transaction-history')) ? 'active' : ''}">
                     <i class="bi bi-list-check"></i> Transaction History
