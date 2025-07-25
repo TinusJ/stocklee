@@ -1,37 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(pageTitle='Stocks', content=~{::content})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stocks - Stock Trading Application</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="bi bi-graph-up"></i> Stock Trading App
-            </a>
-            <div class="navbar-nav">
-                <a class="nav-link" href="/stocks">Stocks</a>
-                <a class="nav-link" href="/user-profiles">Users</a>
+    <div th:fragment="content">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2"><i class="bi bi-graph-up"></i> Stocks</h1>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <a href="/stocks/new" class="btn btn-primary">
+                    <i class="bi bi-plus"></i> Create New Stock
+                </a>
             </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1><i class="bi bi-graph-up"></i> Stocks</h1>
-            <a href="/stocks/new" class="btn btn-primary">
-                <i class="bi bi-plus"></i> Create New Stock
-            </a>
-        </div>
-        
-        <!-- Flash messages -->
-        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle"></i> <span th:text="${successMessage}">Success message</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         
         <!-- Stocks Table -->
@@ -70,12 +51,12 @@
                                     <span class="badge bg-info" th:text="${stock.market}">NASDAQ</span>
                                 </td>
                                 <td th:text="${stock.createdAt != null ? stock.createdAt.toString() : 'N/A'}">2024-01-01</td>
-                                <td>
+                                <td class="table-actions">
                                     <a th:href="@{/stocks/{id}(id=${stock.id})}" class="btn btn-sm btn-outline-primary">View</a>
                                     <a th:href="@{/stocks/{id}/edit(id=${stock.id})}" class="btn btn-sm btn-outline-secondary">Edit</a>
                                     <form th:action="@{/stocks/{id}/delete(id=${stock.id})}" method="post" class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                                onclick="return confirm('Are you sure you want to delete this stock?');">
+                                                onclick="return confirmDelete(event, 'this stock');">
                                             Delete
                                         </button>
                                     </form>
@@ -87,7 +68,5 @@
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
