@@ -56,3 +56,8 @@ stocklee:
 alphavantage:
   api:
     key: demo  # Replace with actual AlphaVantage API key for production
+
+nasdaq:
+  api:
+    key: demo  # Replace with actual Nasdaq API key for production
+    base-url: https://api.nasdaq.com
