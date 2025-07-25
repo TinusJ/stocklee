@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(pageTitle, content)">
-<head th:replace="fragments/head :: head"></head>
+<head th:replace="~{fragments/head :: head}"></head>
 <body>
 
 <!-- Navigation -->
-<div th:replace="fragments/navigation :: navbar"></div>
+<div th:replace="~{fragments/navigation :: navbar}"></div>
 
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
-        <div th:replace="fragments/navigation :: sidebar"></div>
+        <div th:replace="~{fragments/navigation :: sidebar}"></div>
         
         <!-- Main content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
@@ -45,10 +45,10 @@
 </div>
 
 <!-- Footer -->
-<div th:replace="fragments/footer :: footer"></div>
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 <!-- Scripts -->
-<div th:replace="fragments/footer :: scripts"></div>
+<div th:replace="~{fragments/footer :: scripts}"></div>
 
 </body>
 </html>
