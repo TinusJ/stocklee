@@ -271,13 +271,13 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Dashboard JavaScript -->
+        <script src="/js/dashboard.js"></script>
+        
+        <!-- WebSocket Libraries (optional - graceful fallback if unavailable) -->
+        <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js" onerror="console.warn('SockJS library not available')"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js" onerror="console.warn('StompJS library not available')"></script>
     </div>
-
-    <!-- Dashboard JavaScript -->
-    <script src="/js/dashboard.js"></script>
-    
-    <!-- WebSocket Libraries (optional - graceful fallback if unavailable) -->
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js" onerror="console.warn('SockJS library not available')"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js" onerror="console.warn('StompJS library not available')"></script>
 </body>
 </html>
