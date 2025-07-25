@@ -122,6 +122,39 @@ function sellAllShares() {
 }
 
 /**
+ * Confirm stock deletion with user confirmation
+ */
+function confirmDeleteStock() {
+    try {
+        const sellStockSymbol = document.getElementById('sellStockSymbol');
+        const symbol = sellStockSymbol ? sellStockSymbol.textContent : 'this stock';
+        
+        const confirmed = confirm(
+            `⚠️ WARNING: This will permanently delete ${symbol} from your portfolio!\n\n` +
+            `This action will:\n` +
+            `• Sell ALL ${currentMaxShares} shares at current market price\n` +
+            `• Remove the stock from your portfolio entirely\n` +
+            `• Cannot be undone\n\n` +
+            `Are you sure you want to continue?`
+        );
+        
+        if (confirmed) {
+            sellAllShares();
+            // Auto-submit the form after a brief delay to let user see the quantity was set
+            setTimeout(() => {
+                const sellForm = document.querySelector('#sellStockModal form');
+                if (sellForm) {
+                    sellForm.submit();
+                }
+            }, 100);
+        }
+    } catch (error) {
+        console.error('Error in confirmDeleteStock:', error);
+        showError('Error preparing stock deletion.');
+    }
+}
+
+/**
  * Fetch current stock price
  */
 async function fetchCurrentPrice() {
@@ -358,5 +391,6 @@ window.addEventListener('beforeunload', function() {
     }
 });
 
-// Make sellAllShares globally accessible for onclick handlers
+// Make sellAllShares and confirmDeleteStock globally accessible for onclick handlers
 window.sellAllShares = sellAllShares;
+window.confirmDeleteStock = confirmDeleteStock;
