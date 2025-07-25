@@ -4,6 +4,7 @@ import com.tinusj.stocklee.entity.*;
 import com.tinusj.stocklee.repository.RoleRepository;
 import com.tinusj.stocklee.repository.UserRepository;
 import com.tinusj.stocklee.service.HistoryLogService;
+import com.tinusj.stocklee.service.OwnedStockService;
 import com.tinusj.stocklee.service.StockService;
 import com.tinusj.stocklee.service.StockTransactionService;
 import com.tinusj.stocklee.service.UserProfileService;
@@ -31,6 +32,7 @@ public class DataInitializer implements CommandLineRunner {
     private final StockService stockService;
     private final StockTransactionService stockTransactionService;
     private final HistoryLogService historyLogService;
+    private final OwnedStockService ownedStockService;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -145,6 +147,7 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         UserProfile guestUser = userProfileService.findByUsername("Guest").orElse(null);
+        UserProfile adminUser = userProfileService.findByEmail("admin@stocklee.com").orElse(null);
         if (guestUser == null) {
             log.warn("Guest user not found, skipping sample data initialization");
             return;
@@ -167,7 +170,7 @@ public class DataInitializer implements CommandLineRunner {
         microsoftStock.setMarket(Stock.MarketType.NASDAQ);
         stockService.save(microsoftStock);
 
-        // Create sample transactions
+        // Create sample transactions and owned stocks
         StockTransaction buyTransaction = new StockTransaction();
         buyTransaction.setUser(guestUser);
         buyTransaction.setStock(appleStock);
@@ -178,13 +181,87 @@ public class DataInitializer implements CommandLineRunner {
         buyTransaction.setTimestamp(LocalDateTime.now().minusDays(1));
         stockTransactionService.save(buyTransaction);
 
-        // Create sample history log
+        // Create corresponding owned stock
+        ownedStockService.addShares(guestUser, appleStock, BigDecimal.valueOf(10), BigDecimal.valueOf(145.00));
+
+        // Create another owned stock for Microsoft
+        StockTransaction buyTransaction2 = new StockTransaction();
+        buyTransaction2.setUser(guestUser);
+        buyTransaction2.setStock(microsoftStock);
+        buyTransaction2.setTransactionType(StockTransaction.TransactionType.BUY);
+        buyTransaction2.setQuantity(BigDecimal.valueOf(5));
+        buyTransaction2.setPrice(BigDecimal.valueOf(295.00));
+        buyTransaction2.setTotalValue(BigDecimal.valueOf(1475.00));
+        buyTransaction2.setTimestamp(LocalDateTime.now().minusDays(2));
+        stockTransactionService.save(buyTransaction2);
+
+        // Create corresponding owned stock
+        ownedStockService.addShares(guestUser, microsoftStock, BigDecimal.valueOf(5), BigDecimal.valueOf(295.00));
+
+        // Update guest user's balance to reflect purchases
+        BigDecimal currentBalance = guestUser.getBalance();
+        BigDecimal newBalance = currentBalance.subtract(BigDecimal.valueOf(1450.00 + 1475.00));
+        guestUser.setBalance(newBalance);
+        userProfileService.save(guestUser);
+
+        // Create sample history logs
         HistoryLog historyLog = new HistoryLog();
         historyLog.setUser(guestUser);
         historyLog.setAction("Purchased 10 shares of AAPL at $145.00 per share");
         historyLog.setTimestamp(LocalDateTime.now().minusDays(1));
         historyLogService.save(historyLog);
 
-        log.info("Created sample data: 2 stocks, 1 transaction, 1 history log");
+        HistoryLog historyLog2 = new HistoryLog();
+        historyLog2.setUser(guestUser);
+        historyLog2.setAction("Purchased 5 shares of MSFT at $295.00 per share");
+        historyLog2.setTimestamp(LocalDateTime.now().minusDays(2));
+        historyLogService.save(historyLog2);
+
+        // Add some owned stocks for admin user too (if exists)
+        if (adminUser != null) {
+            // Create some Tesla stock
+            Stock teslaStock = new Stock();
+            teslaStock.setSymbol("TSLA");
+            teslaStock.setName("Tesla Inc.");
+            teslaStock.setDescription("Electric vehicle and clean energy company");
+            teslaStock.setCurrentPrice(BigDecimal.valueOf(200.00));
+            teslaStock.setMarket(Stock.MarketType.NASDAQ);
+            stockService.save(teslaStock);
+
+            // Add shares for admin
+            ownedStockService.addShares(adminUser, teslaStock, BigDecimal.valueOf(25), BigDecimal.valueOf(190.00));
+            ownedStockService.addShares(adminUser, appleStock, BigDecimal.valueOf(15), BigDecimal.valueOf(148.00));
+
+            // Create transactions for admin
+            StockTransaction adminTransaction1 = new StockTransaction();
+            adminTransaction1.setUser(adminUser);
+            adminTransaction1.setStock(teslaStock);
+            adminTransaction1.setTransactionType(StockTransaction.TransactionType.BUY);
+            adminTransaction1.setQuantity(BigDecimal.valueOf(25));
+            adminTransaction1.setPrice(BigDecimal.valueOf(190.00));
+            adminTransaction1.setTotalValue(BigDecimal.valueOf(4750.00));
+            adminTransaction1.setTimestamp(LocalDateTime.now().minusDays(3));
+            stockTransactionService.save(adminTransaction1);
+
+            StockTransaction adminTransaction2 = new StockTransaction();
+            adminTransaction2.setUser(adminUser);
+            adminTransaction2.setStock(appleStock);
+            adminTransaction2.setTransactionType(StockTransaction.TransactionType.BUY);
+            adminTransaction2.setQuantity(BigDecimal.valueOf(15));
+            adminTransaction2.setPrice(BigDecimal.valueOf(148.00));
+            adminTransaction2.setTotalValue(BigDecimal.valueOf(2220.00));
+            adminTransaction2.setTimestamp(LocalDateTime.now().minusDays(4));
+            stockTransactionService.save(adminTransaction2);
+
+            // Update admin balance
+            BigDecimal adminBalance = adminUser.getBalance();
+            BigDecimal newAdminBalance = adminBalance.subtract(BigDecimal.valueOf(4750.00 + 2220.00));
+            adminUser.setBalance(newAdminBalance);
+            userProfileService.save(adminUser);
+
+            log.info("Added owned stocks for admin user as well");
+        }
+
+        log.info("Created sample data: 3 stocks, 4 transactions, 4 owned stocks, 2 history logs");
     }
 }
