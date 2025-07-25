@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(pageTitle=${pageTitle}, content=~{::content})}">
+<head>
+    <title th:text="${pageTitle}">Stock History Details</title>
+</head>
+
+<div th:fragment="content">
+    <!-- Stock Information -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h3 class="mb-1" th:text="${stock.symbol}">SYMBOL</h3>
+                    <h6 class="text-muted mb-3" th:text="${stock.name}">Stock Name</h6>
+                    <p class="mb-0" th:text="${stock.description}">Stock description</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div th:if="${currentPrice}">
+                        <h4 class="text-success mb-1">
+                            <span th:text="'$' + ${#numbers.formatDecimal(currentPrice, 0, 2)}">Current Price</span>
+                        </h4>
+                        <small class="text-muted">Current Price</small>
+                    </div>
+                    <div th:unless="${currentPrice}">
+                        <h4 class="text-muted mb-1">N/A</h4>
+                        <small class="text-muted">Price Unavailable</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="mb-3">
+        <a href="/stock-history" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Stock History
+        </a>
+    </div>
+
+    <!-- Price History -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Price History</h5>
+            
+            <div th:if="${#lists.isEmpty(stockHistories)}" class="text-center text-muted py-4">
+                <i class="bi bi-graph-down fs-1"></i>
+                <p class="mt-3 mb-0">No price history found for this stock.</p>
+            </div>
+            
+            <div th:unless="${#lists.isEmpty(stockHistories)}">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Price</th>
+                                <th>Change</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="history,iterStat : ${stockHistories}">
+                                <td th:text="${#temporals.format(history.timestamp, 'dd/MM/yyyy HH:mm:ss')}">Date</td>
+                                <td>
+                                    <strong th:text="'$' + ${#numbers.formatDecimal(history.price, 0, 2)}">Price</strong>
+                                </td>
+                                <td>
+                                    <span th:if="${iterStat.index < (#lists.size(stockHistories) - 1)}"
+                                          th:with="previousPrice=${stockHistories[iterStat.index + 1].price},
+                                                   change=${history.price - previousPrice},
+                                                   changePercent=${(change / previousPrice) * 100}"
+                                          th:class="${change >= 0 ? 'text-success' : 'text-danger'}">
+                                        <i th:class="${change >= 0 ? 'bi bi-arrow-up' : 'bi bi-arrow-down'}"></i>
+                                        <span th:text="'$' + ${#numbers.formatDecimal(change, 0, 2)}">Change</span>
+                                        (<span th:text="${#numbers.formatDecimal(changePercent, 0, 2)} + '%'">Percent</span>)
+                                    </span>
+                                    <span th:unless="${iterStat.index < (#lists.size(stockHistories) - 1)}" 
+                                          class="text-muted">
+                                        <i class="bi bi-dash"></i> Initial Price
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3 text-muted">
+                    <small>Showing <span th:text="${#lists.size(stockHistories)}">0</span> price records</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</html>

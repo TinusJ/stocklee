@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,17 +49,17 @@ public class StockHistoryWebController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
         // Get all stock history
-        List<StockHistory> stockHistories = stockHistoryService.findAll();
+        List<StockHistory> stockHistories = new ArrayList<>(stockHistoryService.findAll());
         
         // Filter by stock if specified
         if (stockId != null) {
-            stockHistories = stockHistories.stream()
+            stockHistories = new ArrayList<>(stockHistories.stream()
                 .filter(history -> history.getStock().getId().equals(stockId))
-                .toList();
+                .toList());
         } else if (symbol != null && !symbol.trim().isEmpty()) {
-            stockHistories = stockHistories.stream()
+            stockHistories = new ArrayList<>(stockHistories.stream()
                 .filter(history -> history.getStock().getSymbol().equalsIgnoreCase(symbol.trim()))
-                .toList();
+                .toList());
         }
         
         // Sort manually for now
@@ -99,10 +100,10 @@ public class StockHistoryWebController {
                 .orElseThrow(() -> new RuntimeException("Stock not found with id: " + stockId));
         
         // Get history for this stock
-        List<StockHistory> stockHistories = stockHistoryService.findAll().stream()
+        List<StockHistory> stockHistories = new ArrayList<>(stockHistoryService.findAll().stream()
             .filter(history -> history.getStock().getId().equals(stockId))
             .sorted((h1, h2) -> h2.getTimestamp().compareTo(h1.getTimestamp())) // Latest first
-            .toList();
+            .toList());
         
         // Get current price
         var currentPrice = stockPriceProvider.getPrice(stock.getSymbol());
