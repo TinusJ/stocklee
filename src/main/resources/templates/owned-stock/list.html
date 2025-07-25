@@ -111,8 +111,19 @@
                                     <strong th:text="${#numbers.formatDecimal(ownedStock.profitLossPercentage, 0, 2)} + '%'">%</strong>
                                 </td>
                                 <td>
-                                    <a th:href="@{/owned-stocks/{id}(id=${ownedStock.id})}" 
-                                       class="btn btn-sm btn-outline-primary">View</a>
+                                    <div class="btn-group" role="group">
+                                        <a th:href="@{/owned-stocks/{id}(id=${ownedStock.id})}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-danger delete-stock-btn"
+                                                th:data-stock-id="${ownedStock.id}"
+                                                th:data-stock-symbol="${ownedStock.stock.symbol}"
+                                                th:data-stock-quantity="${ownedStock.quantity}">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -125,5 +136,122 @@
             </div>
         </div>
     </div>
+
+    <!-- Delete Stock Confirmation Modal -->
+    <div class="modal fade" id="deleteStockModal" tabindex="-1" aria-labelledby="deleteStockModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteStockModalLabel">
+                        <i class="bi bi-exclamation-triangle"></i> Delete Stock
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Warning:</strong> This action cannot be undone!
+                    </div>
+                    <p>Are you sure you want to delete <strong id="deleteStockSymbol">STOCK</strong> from your portfolio?</p>
+                    <p>This will sell all <strong id="deleteStockQuantity">0</strong> shares at the current market price and remove the stock from your portfolio entirely.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteStock">
+                        <i class="bi bi-trash"></i> Delete Stock
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for delete functionality -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize delete buttons
+        const deleteButtons = document.querySelectorAll('.delete-stock-btn');
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteStockModal'));
+        let currentStockToDelete = null;
+
+        deleteButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                const stockId = this.getAttribute('data-stock-id');
+                const stockSymbol = this.getAttribute('data-stock-symbol');
+                const quantity = this.getAttribute('data-stock-quantity');
+                
+                currentStockToDelete = {
+                    id: stockId,
+                    symbol: stockSymbol,
+                    quantity: quantity
+                };
+                
+                // Update modal content
+                document.getElementById('deleteStockSymbol').textContent = stockSymbol;
+                document.getElementById('deleteStockQuantity').textContent = parseFloat(quantity).toString();
+                
+                deleteModal.show();
+            });
+        });
+
+        // Handle delete confirmation
+        document.getElementById('confirmDeleteStock').addEventListener('click', function() {
+            if (currentStockToDelete) {
+                deleteStock(currentStockToDelete);
+            }
+        });
+
+        function deleteStock(stockInfo) {
+            // Create form data for selling all shares (which deletes the stock)
+            const formData = new FormData();
+            formData.append('ownedStockId', stockInfo.id);
+            formData.append('quantity', stockInfo.quantity);
+
+            // Show loading state
+            const deleteBtn = document.getElementById('confirmDeleteStock');
+            const originalText = deleteBtn.innerHTML;
+            deleteBtn.innerHTML = '<i class="bi bi-spinner-grow" role="status" aria-hidden="true"></i> Deleting...';
+            deleteBtn.disabled = true;
+
+            // Submit sell request to delete the stock
+            fetch('/sell-stock', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (response.redirected) {
+                    // Success - reload the page to show updated list
+                    window.location.reload();
+                } else {
+                    return response.text();
+                }
+            })
+            .then(data => {
+                if (data) {
+                    // Handle error response
+                    showError('Failed to delete stock: ' + data);
+                    deleteBtn.innerHTML = originalText;
+                    deleteBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting stock:', error);
+                showError('An error occurred while deleting the stock. Please try again.');
+                deleteBtn.innerHTML = originalText;
+                deleteBtn.disabled = false;
+            });
+        }
+
+        function showError(message) {
+            // Simple error display - could be enhanced with better UI
+            alert(message);
+            deleteModal.hide();
+        }
+    });
+    </script>
 </div>
 </html>

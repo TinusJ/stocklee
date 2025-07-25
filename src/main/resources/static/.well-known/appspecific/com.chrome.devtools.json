@@ -1,0 +1,10 @@
+{
+  "app": {
+    "name": "Stocklee - Stock Trading Application",
+    "version": "0.0.1-SNAPSHOT"
+  },
+  "configuration_url": "/",
+  "metadata": {
+    "description": "Stock trading application built with Spring Boot"
+  }
+}

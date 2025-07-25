@@ -251,9 +251,15 @@
                                 <div class="form-text">
                                     Enter the number of shares you want to sell (fractional shares allowed)
                                     <br>
-                                    <button type="button" class="btn btn-link btn-sm p-0 mt-1" onclick="if(typeof sellAllShares === 'function') { sellAllShares(); } else { document.getElementById('sellQuantity').value = currentMaxShares || 0; }">
-                                        <i class="bi bi-box-arrow-down"></i> Sell All Shares
-                                    </button>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-outline-warning btn-sm me-2" onclick="sellAllShares()">
+                                            <i class="bi bi-box-arrow-down"></i> Sell All Shares
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDeleteStock()">
+                                            <i class="bi bi-trash"></i> Delete Stock Entirely
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">Delete Stock will sell all shares and remove the stock from your portfolio permanently.</small>
                                 </div>
                             </div>
                         </div>
