@@ -3,6 +3,7 @@ package com.tinusj.stocklee.controller;
 import com.tinusj.stocklee.config.TestSecurityConfig;
 import com.tinusj.stocklee.entity.Stock;
 import com.tinusj.stocklee.service.StockService;
+import com.tinusj.stocklee.service.StockHistoryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,6 +32,9 @@ class StockControllerPriceTest {
 
     @MockBean
     private StockService stockService;
+
+    @MockBean
+    private StockHistoryService stockHistoryService;
 
     @Test
     void testGetCurrentPrice_Success() throws Exception {

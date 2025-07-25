@@ -1,4 +1,4 @@
-package com.tinusj.stocklee.service;
+package com.tinusj.stocklee.enums;
 
 /**
  * Enum for commonly traded stock symbols.
